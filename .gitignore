@@ -1,0 +1,12 @@
+# Ignore Auto-Generated Hyprland Configs
+.config/hypr/config/env.conf
+.config/hypr/config/settings.conf
+.config/hypr/config/autostart.conf
+.config/hypr/config/keybindings.conf
+.config/hypr/config/monitors.conf
+
+# IDEs
+.idea
+commit.txt
+.vscode
+.config/hypr/scripts/quickshell/calendar/.env
