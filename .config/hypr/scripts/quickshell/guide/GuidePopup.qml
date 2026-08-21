@@ -224,8 +224,31 @@ Item {
     // -------------------------------------------------------------------------
     property int currentTab: 1
     property int selectedModuleIndex: 0
-    property var tabNames: ["Settings", "System", "Modules", "Matugen", "About"]
-    property var tabIcons: ["", "", "󰣆", "󰏘", ""]
+    property var tabNames: ["Settings", "System", "Modules", "Matugen", "TopBar"]
+    property var tabIcons: ["", "", "󰣆", "󰏘", "󰍹"]
+
+    property string currentTopbarPos: "top"
+
+    function setTopbarPosition(pos) {
+        root.currentTopbarPos = pos;
+        Quickshell.execDetached([
+            "bash", "-c",
+            "python3 -c \"import json, os; p=os.path.expanduser('~/.config/hypr/settings.json'); f=open(p,'r+'); d=json.load(f); d['topbarPosition']='" + pos + "'; f.seek(0); json.dump(d,f,indent=2); f.truncate()\""
+        ]);
+    }
+
+    Process {
+        id: posReader
+        command: ["bash", "-c", "python3 -c \"import json, os; p=os.path.expanduser('~/.config/hypr/settings.json'); print(json.load(open(p)).get('topbarPosition','top'))\" 2>/dev/null || echo 'top'"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (this.text && this.text.trim()) {
+                    root.currentTopbarPos = this.text.trim();
+                }
+            }
+        }
+    }
 
     property real introBase: 0.0
     property real introSidebar: 0.0
@@ -433,7 +456,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                             spacing: root.s(2)
                             Text { 
-                                text: "Imperative"
+                                text: "ndyar-dots"
                                 font.family: "JetBrains Mono"
                                 font.weight: Font.Black
                                 font.pixelSize: root.s(15)
@@ -1525,7 +1548,7 @@ Item {
             }
 
             // ------------------------------------------
-            // TAB 4: ABOUT
+            // TAB 4: TOPBAR CONFIGURATION
             // ------------------------------------------
             Item {
                 anchors.fill: parent
@@ -1537,55 +1560,113 @@ Item {
                 transform: Translate { y: slideY }
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
-                RowLayout {
+                ColumnLayout {
                     anchors.centerIn: parent
-                    spacing: root.s(30)
+                    spacing: root.s(25)
 
-                    Repeater {
-                        model: [
-                        ]
+                    ColumnLayout {
+                        Layout.alignment: Qt.AlignHCenter
+                        spacing: root.s(6)
+                        
+                        Text {
+                            text: "Top Bar Position"
+                            font.family: "JetBrains Mono"
+                            font.weight: Font.Black
+                            font.pixelSize: root.s(22)
+                            color: root.text
+                            Layout.alignment: Qt.AlignHCenter
+                        }
 
-                        Rectangle {
-                            Layout.preferredWidth: root.s(140)
-                            Layout.preferredHeight: root.s(140)
-                            radius: root.s(16)
-                            color: repoMa.containsMouse ? Qt.alpha(root[modelData.color], 0.15) : Qt.alpha(root.surface0, 0.4)
-                            border.color: repoMa.containsMouse ? root[modelData.color] : root.surface1
-                            border.width: 1
-                            scale: repoMa.pressed ? 0.95 : (repoMa.containsMouse ? 1.05 : 1.0)
+                        Text {
+                            text: "Select the screen position for your bar"
+                            font.family: "JetBrains Mono"
+                            font.pixelSize: root.s(13)
+                            color: root.subtext0
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
 
-                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                            Behavior on color { ColorAnimation { duration: 200 } }
-                            Behavior on border.color { ColorAnimation { duration: 200 } }
+                    RowLayout {
+                        Layout.alignment: Qt.AlignHCenter
+                        spacing: root.s(20)
 
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                spacing: root.s(15)
+                        Repeater {
+                                model: [
+                                    { name: "Top",    posKey: "top",    icon: "↑", desc: "Top Edge" },
+                                    { name: "Bottom", posKey: "bottom", icon: "↓", desc: "Bottom Edge" },
+                                    { name: "Left",   posKey: "left",   icon: "←", desc: "Left Side" },
+                                    { name: "Right",  posKey: "right",  icon: "→", desc: "Right Side" }
+                                ]
 
-                                Text {
-                                    text: modelData.icon
-                                    font.family: "Iosevka Nerd Font"
-                                    font.pixelSize: root.s(42)
-                                    color: root[modelData.color]
-                                    Layout.alignment: Qt.AlignHCenter
+                            Rectangle {
+                                Layout.preferredWidth: root.s(140)
+                                Layout.preferredHeight: root.s(160)
+                                radius: root.s(16)
+
+                                property bool isSelected: root.currentTopbarPos === modelData.posKey
+                                property bool isHovered: posMa.containsMouse
+
+                                color: isSelected 
+                                       ? Qt.alpha(root.blue, 0.2) 
+                                       : (isHovered ? Qt.alpha(root.surface1, 0.8) : Qt.alpha(root.surface0, 0.4))
+                                border.color: isSelected 
+                                              ? root.blue 
+                                              : (isHovered ? root.subtext0 : root.surface1)
+                                border.width: isSelected ? 2 : 1
+                                scale: posMa.pressed ? 0.95 : (isHovered ? 1.05 : 1.0)
+
+                                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                                Behavior on border.color { ColorAnimation { duration: 200 } }
+
+                                ColumnLayout {
+                                    anchors.centerIn: parent
+                                    spacing: root.s(12)
+
+                                    Rectangle {
+                                        Layout.alignment: Qt.AlignHCenter
+                                        width: root.s(50)
+                                        height: root.s(50)
+                                        radius: root.s(14)
+                                        color: isSelected ? root.blue : (isHovered ? root.surface2 : root.surface1)
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.icon
+                                            font.family: "Iosevka Nerd Font"
+                                            font.pixelSize: root.s(26)
+                                            color: isSelected ? root.base : (isHovered ? root.text : root.subtext0)
+                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                        }
+                                    }
+
+                                    Text {
+                                        text: modelData.name
+                                        font.family: "JetBrains Mono"
+                                        font.weight: Font.Bold
+                                        font.pixelSize: root.s(14)
+                                        color: isSelected ? root.blue : root.text
+                                        Layout.alignment: Qt.AlignHCenter
+                                    }
+
+                                    Text {
+                                        text: isSelected ? "Active" : modelData.desc
+                                        font.family: "JetBrains Mono"
+                                        font.pixelSize: root.s(11)
+                                        font.weight: isSelected ? Font.Bold : Font.Normal
+                                        color: isSelected ? root.blue : root.subtext0
+                                        Layout.alignment: Qt.AlignHCenter
+                                    }
                                 }
 
-                                Text {
-                                    text: modelData.name
-                                    font.family: "JetBrains Mono"
-                                    font.weight: Font.Bold
-                                    font.pixelSize: root.s(13)
-                                    color: root.text
-                                    Layout.alignment: Qt.AlignHCenter
+                                MouseArea {
+                                    id: posMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.setTopbarPosition(modelData.posKey)
                                 }
-                            }
-
-                            MouseArea {
-                                id: repoMa
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: Quickshell.execDetached(["xdg-open", modelData.url])
                             }
                         }
                     }

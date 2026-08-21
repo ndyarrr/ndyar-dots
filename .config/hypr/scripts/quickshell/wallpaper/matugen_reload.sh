@@ -80,6 +80,54 @@ done
 # Reload Kitty instances
 killall -USR1 kitty
 
+# Reload Foot terminal instances live via OSC escape sequences
+python3 -c '
+import os
+
+foot_ini = os.path.expanduser("~/.config/foot/foot-matugen-colors.ini")
+if os.path.exists(foot_ini):
+    colors = {}
+    with open(foot_ini, "r") as f:
+        for line in f:
+            line = line.strip()
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                colors[k.strip()] = v.strip().lstrip("#")
+    
+    seqs = []
+    if "foreground" in colors:
+        fg = colors["foreground"]
+        seqs.append(f"\033]10;#{fg}\033\\")
+    if "background" in colors:
+        bg = colors["background"]
+        seqs.append(f"\033]11;#{bg}\033\\")
+    
+    for i in range(8):
+        reg = f"regular{i}"
+        if reg in colors:
+            val = colors[reg]
+            seqs.append(f"\033]4;{i};#{val}\033\\")
+    
+    for i in range(8):
+        br = f"bright{i}"
+        if br in colors:
+            val = colors[br]
+            seqs.append(f"\033]4;{i+8};#{val}\033\\")
+    
+    osc_payload = "".join(seqs).encode("utf-8")
+    
+    pts_dir = "/dev/pts"
+    if os.path.exists(pts_dir):
+        for entry in os.listdir(pts_dir):
+            pts_path = os.path.join(pts_dir, entry)
+            if entry.isdigit():
+                try:
+                    with open(pts_path, "wb", buffering=0) as f:
+                        f.write(osc_payload)
+                except Exception:
+                    pass
+'
+
 # Reload CAVA
 # ALWAYS rebuild the final config file from the base and newly generated colors
 cat ~/.config/cava/config_base ~/.config/cava/colors > ~/.config/cava/config 2>/dev/null

@@ -174,6 +174,8 @@ Item {
                     export TARGET_MONITORS="${escOutputs}"
                     
                     cp "$DEST_FILE" ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper.png || true
+                    echo "$DEST_FILE" > ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper_path
+                    echo "image" > ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper_type
                     pkill mpvpaper || true
                     
                     echo "" >> ${logFile}
@@ -181,9 +183,9 @@ Item {
                     
                     pgrep -f awww-daemon >/dev/null || awww-daemon &
                     if [ "$TARGET_MONITORS" = "all" ]; then
-                        awww img "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                        awww img "$DEST_FILE" --resize crop --crop-gravity center --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                     else
-                        awww img -o "$TARGET_MONITORS" "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                        awww img -o "$TARGET_MONITORS" "$DEST_FILE" --resize crop --crop-gravity center --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                     fi
                     
                     ( matugen image "$FINAL_THUMB" --source-color-index 0 || true; bash "$RELOAD_SCRIPT" || true ) &
@@ -217,6 +219,8 @@ Item {
                         magick "$DEST_FILE" -resize x420 -quality 70 "$FINAL_THUMB" || true
                         
                         cp "$DEST_FILE" ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper.png || true
+                        echo "$DEST_FILE" > ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper_path
+                        echo "image" > ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper_type
                         pkill mpvpaper || true
                         
                         echo "" >> ${logFile}
@@ -224,9 +228,9 @@ Item {
                         
                         pgrep -f awww-daemon >/dev/null || awww-daemon &
                         if [ "$TARGET_MONITORS" = "all" ]; then
-                            awww img "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                            awww img "$DEST_FILE" --resize crop --crop-gravity center --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                         else
-                            awww img -o "$TARGET_MONITORS" "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                            awww img -o "$TARGET_MONITORS" "$DEST_FILE" --resize crop --crop-gravity center --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                         fi
                         
                         ( matugen image "$FINAL_THUMB" --source-color-index 0 || true; bash "$RELOAD_SCRIPT" || true ) &
@@ -252,11 +256,11 @@ Item {
                 echo "[$(date +'%H:%M:%S.%3N')] APPLYING LOCAL VIDEO: ${escOriginal} TO ${escOutputs}" >> ${logFile}
                 
                 if [ "${escOutputs}" = "all" ]; then
-                    mpvpaper -o 'loop --no-audio --hwdec=auto --profile=high-quality --video-sync=display-resample --interpolation --tscale=oversample' '*' "${escOriginal}" >> ${logFile} 2>&1 &
+                    mpvpaper -o 'loop --no-audio --hwdec=auto --panscan=1.0' '*' "${escOriginal}" >> ${logFile} 2>&1 &
                 else
                     IFS=',' read -ra MON_ARR <<< "${escOutputs}"
                     for mon in "\${MON_ARR[@]}"; do
-                        mpvpaper -o 'loop --no-audio --hwdec=auto --profile=high-quality --video-sync=display-resample --interpolation --tscale=oversample' "\$mon" "${escOriginal}" >> ${logFile} 2>&1 &
+                        mpvpaper -o 'loop --no-audio --hwdec=auto --panscan=1.0' "\$mon" "${escOriginal}" >> ${logFile} 2>&1 &
                     done
                 fi
             `;
@@ -267,15 +271,17 @@ Item {
                 
                 pgrep -f awww-daemon >/dev/null || awww-daemon &
                 if [ "${escOutputs}" = "all" ]; then
-                    awww img "${escOriginal}" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                    awww img "${escOriginal}" --resize crop --crop-gravity center --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                 else
-                    awww img -o "${escOutputs}" "${escOriginal}" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                    awww img -o "${escOutputs}" "${escOriginal}" --resize crop --crop-gravity center --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                 fi
             `;
         }
 
         const fullScript = `
             cp "${isVideo ? escThumb : escOriginal}" ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper.png || true
+            echo "${escOriginal}" > ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper_path
+            echo "${isVideo ? 'video' : 'image'}" > ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper_type
             pkill mpvpaper || true
             
             ${wallpaperCmd}
@@ -887,7 +893,21 @@ Item {
         } 
     }
     
-    Shortcut { sequence: "Escape"; enabled: !window.isApplying; onActivated: { if (window.currentFilter === "Search") { window.currentFilter = "All"; } } }
+    Shortcut { 
+        sequence: "Escape"
+        enabled: !window.isApplying
+        onActivated: {
+            if (searchInput.activeFocus || searchInput.focus) {
+                searchInput.focus = false;
+                if (view) view.forceActiveFocus();
+            } else if (window.currentFilter === "Search") {
+                window.currentFilter = "All";
+                if (view) view.forceActiveFocus();
+            } else {
+                Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh close wallpaper"]);
+            }
+        }
+    }
     Shortcut { sequence: "Tab"; enabled: !window.isApplying; onActivated: window.cycleFilter(1) }
     Shortcut { sequence: "Backtab"; enabled: !window.isApplying; onActivated: window.cycleFilter(-1) }
 
@@ -1724,6 +1744,11 @@ Item {
                     font.pixelSize: window.s(16)
                     clip: true
                     
+                    Keys.onEscapePressed: {
+                        searchInput.focus = false;
+                        if (view) view.forceActiveFocus();
+                    }
+
                     onTextEdited: {
                         window.hasSearched = false;
                         searchState.searched = false;

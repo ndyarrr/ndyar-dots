@@ -251,6 +251,8 @@ PanelWindow {
     }
     onGlobalUiScaleChanged: { handleNativeScreenChange(); }
 
+    property string topbarPosition: "top"
+
     Process {
         id: settingsReader
         command: ["bash", "-c", "cat ~/.config/hypr/settings.json 2>/dev/null || echo '{}'"]
@@ -262,6 +264,10 @@ PanelWindow {
                         let parsed = JSON.parse(this.text);
                         if (parsed.uiScale !== undefined && masterWindow.globalUiScale !== parsed.uiScale) {
                             masterWindow.globalUiScale = parsed.uiScale;
+                        }
+                        if (parsed.topbarPosition !== undefined && masterWindow.topbarPosition !== parsed.topbarPosition) {
+                            masterWindow.topbarPosition = parsed.topbarPosition;
+                            masterWindow._layoutCacheKey = "";
                         }
                     }
                 } catch (e) {
@@ -292,9 +298,9 @@ PanelWindow {
     property string _layoutCacheKey: ""
 
     function getLayout(name) {
-        let key = name + "|" + masterWindow.width + "|" + masterWindow.height + "|" + masterWindow.globalUiScale;
+        let key = name + "|" + masterWindow.width + "|" + masterWindow.height + "|" + masterWindow.globalUiScale + "|" + masterWindow.topbarPosition;
         if (_layoutCacheKey === key) return _layoutCache[key];
-        let result = Registry.getLayout(name, 0, 0, masterWindow.width, masterWindow.height, masterWindow.globalUiScale);
+        let result = Registry.getLayout(name, 0, 0, masterWindow.width, masterWindow.height, masterWindow.globalUiScale, masterWindow.topbarPosition);
         _layoutCache = {};
         _layoutCache[key] = result;
         _layoutCacheKey = key;

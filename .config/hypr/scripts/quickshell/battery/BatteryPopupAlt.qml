@@ -1382,10 +1382,10 @@ Item {
                             
                             Repeater {
                                 model: ListModel {
-                                    ListElement { action: "lock"; icon: ""; baseColor: "mauve"; weight: 1.0 }
-                                    ListElement { action: "sleep"; icon: "ᶻ 𝗓 𝗓"; baseColor: "blue"; weight: 1.0 }
-                                    ListElement { action: "reboot"; icon: "󰑓"; baseColor: "yellow"; weight: 2.5 }
-                                    ListElement { action: "shutdown"; icon: ""; baseColor: "red"; weight: 3.5 }
+                                    ListElement { actionName: "lock"; icon: ""; baseColor: "mauve"; weight: 1.0 }
+                                    ListElement { actionName: "sleep"; icon: "ᶻ 𝗓 𝗓"; baseColor: "blue"; weight: 1.0 }
+                                    ListElement { actionName: "reboot"; icon: "󰑓"; baseColor: "yellow"; weight: 1.6 }
+                                    ListElement { actionName: "shutdown"; icon: ""; baseColor: "red"; weight: 2.0 }
                                 }
                                 
                                 delegate: Rectangle {
@@ -1399,7 +1399,7 @@ Item {
                                     
                                     property color c1: window[baseColor] || window.surface1
                                     property color c2: Qt.lighter(c1, 1.2)
-                                    property string pendingAction: action
+                                    property string pendingAction: model.actionName || actionName
 
                                     color: actionMa.containsMouse ? window.surface1 : window.surface0
                                     border.color: actionMa.containsMouse ? c1 : window.surface2
@@ -1491,39 +1491,61 @@ Item {
                                         }
                                     }
 
+                                    function triggerAction() {
+                                        if (actionCapsule.triggered) return;
+                                        actionCapsule.triggered = true;
+                                        actionCapsule.fillLevel = 1.0;
+                                        fillAnim.stop();
+                                        drainAnim.stop();
+                                        actionCapsule.flashOpacity = 0.6;
+                                        cardFlashAnim.start();
+                                        exitAnim.start();
+                                        exitTimer.start();
+                                    }
+
                                     MouseArea {
                                         id: actionMa
                                         anchors.fill: parent
                                         hoverEnabled: true
+                                        preventStealing: true
                                         cursorShape: actionCapsule.triggered ? Qt.ArrowCursor : Qt.PointingHandCursor
                                         
                                         onPressed: { 
                                             if (!actionCapsule.triggered) { 
+                                                actionCapsule.fillLevel = 0.0;
                                                 drainAnim.stop(); 
                                                 fillAnim.start(); 
                                             }
                                         }
                                         onReleased: {
-                                            if (!actionCapsule.triggered && actionCapsule.fillLevel < 1.0) { 
-                                                fillAnim.stop(); 
-                                                drainAnim.start(); 
+                                            if (!actionCapsule.triggered) { 
+                                                if (actionCapsule.fillLevel >= 0.80) {
+                                                    actionCapsule.triggerAction();
+                                                } else {
+                                                    fillAnim.stop(); 
+                                                    drainAnim.start(); 
+                                                }
                                             }
                                         }
                                         onCanceled: {
-                                            if (!actionCapsule.triggered && actionCapsule.fillLevel < 1.0) {
-                                                fillAnim.stop();
-                                                drainAnim.start();
+                                            if (!actionCapsule.triggered) {
+                                                if (actionCapsule.fillLevel >= 0.80) {
+                                                    actionCapsule.triggerAction();
+                                                } else {
+                                                    fillAnim.stop();
+                                                    drainAnim.start();
+                                                }
                                             }
                                         }
                                     }
 
                                     NumberAnimation {
                                         id: fillAnim; target: actionCapsule; property: "fillLevel"; to: 1.0
-                                        duration: Math.max(50, (550 * weight) * (1.0 - actionCapsule.fillLevel)); easing.type: Easing.InSine
+                                        duration: Math.max(50, (500 * weight) * (1.0 - actionCapsule.fillLevel)); easing.type: Easing.InSine
                                         onFinished: {
-                                            if (actionCapsule.fillLevel < 0.99) return;
-                                            actionCapsule.triggered = true; actionCapsule.flashOpacity = 0.6; cardFlashAnim.start();
-                                            exitAnim.start(); exitTimer.start();
+                                            if (actionCapsule.fillLevel >= 0.95) {
+                                                actionCapsule.triggerAction();
+                                            }
                                         }
                                     }
                                     
@@ -1535,14 +1557,15 @@ Item {
                                     Timer {
                                         id: exitTimer; interval: 350
                                         onTriggered: {
+                                            let homeDir = Quickshell.env("HOME");
                                             Quickshell.execDetached([
                                                 "bash",
-                                                Quickshell.env("HOME") + "/.config/hypr/scripts/power_action.sh",
+                                                homeDir + "/.config/hypr/scripts/power_action.sh",
                                                 actionCapsule.pendingAction
                                             ]);
                                             Quickshell.execDetached([
                                                 "bash",
-                                                Quickshell.env("HOME") + "/.config/hypr/scripts/qs_manager.sh",
+                                                homeDir + "/.config/hypr/scripts/qs_manager.sh",
                                                 "close"
                                             ]);
                                         }

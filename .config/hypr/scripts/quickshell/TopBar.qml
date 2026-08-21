@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.SystemTray
+import Quickshell.Hyprland
 
 Variants {
     model: Quickshell.screens
@@ -12,7 +13,18 @@ Variants {
     delegate: Component {
         PanelWindow {
             id: barWindow
+            WlrLayershell.namespace: "qs-topbar"
+            WlrLayershell.layer: WlrLayer.Overlay
             property bool pendingReload: false
+
+            required property var modelData
+            screen: modelData
+
+            property var hyprlandMonitor: Hyprland.monitorFor(barWindow.modelData)
+            property bool isFullscreen: barWindow.hyprlandMonitor?.activeWorkspace?.hasFullscreen ?? false
+            visible: !barWindow.isFullscreen
+
+            property string topbarPosition: "top"
             
 	    Caching { id: paths }
 
@@ -40,18 +52,16 @@ Variants {
                 }
             }
 
-            required property var modelData
-            screen: modelData
-
             anchors {
-                top: true
-                left: true
-                right: true
+                top: barWindow.topbarPosition !== "bottom"
+                bottom: barWindow.topbarPosition !== "top"
+                left: barWindow.topbarPosition !== "right"
+                right: barWindow.topbarPosition !== "left"
             }
 
             Scaler {
                 id: scaler
-                currentWidth: barWindow.width
+                currentWidth: (barWindow.screen && barWindow.screen.width > 0) ? barWindow.screen.width : 1920
             }
 
             property real baseScale: scaler.baseScale
@@ -60,10 +70,17 @@ Variants {
                 return scaler.s(val); 
             }
 
-            property int barHeight: s(48)
+            property int barHeight: (topbarPosition === "left" || topbarPosition === "right") ? s(52) : s(48)
 
-            height: barHeight
-            margins { top: s(8); bottom: 0; left: s(4); right: s(4) }
+            height: (barWindow.topbarPosition === "left" || barWindow.topbarPosition === "right") ? barWindow.screen.height : barWindow.barHeight
+            width: (barWindow.topbarPosition === "left" || barWindow.topbarPosition === "right") ? barWindow.barHeight : barWindow.screen.width
+
+            margins {
+                top: barWindow.topbarPosition === "bottom" ? 0 : (barWindow.topbarPosition === "top" ? barWindow.s(8) : barWindow.s(4))
+                bottom: barWindow.topbarPosition === "top" ? 0 : (barWindow.topbarPosition === "bottom" ? barWindow.s(8) : barWindow.s(4))
+                left: barWindow.topbarPosition === "right" ? 0 : (barWindow.topbarPosition === "left" ? barWindow.s(8) : barWindow.s(4))
+                right: barWindow.topbarPosition === "left" ? 0 : (barWindow.topbarPosition === "right" ? barWindow.s(8) : barWindow.s(4))
+            }
             exclusiveZone: barHeight 
             color: "transparent"
 
@@ -212,6 +229,10 @@ Variants {
                                     barWindow.showHelpIcon = parsed.topbarHelpIcon;
                                 }
                                 
+                                if (parsed.topbarPosition !== undefined && barWindow.topbarPosition !== parsed.topbarPosition) {
+                                    barWindow.topbarPosition = parsed.topbarPosition;
+                                }
+                                
                                 if (parsed.workspaceCount !== undefined && barWindow.workspaceCount !== parsed.workspaceCount) {
                                     barWindow.workspaceCount = parsed.workspaceCount;
                                     wsDaemon.running = false;
@@ -263,6 +284,9 @@ Variants {
             Timer { interval: 600; running: true; onTriggered: barWindow.isDataReady = true }
             
             property string timeStr: ""
+            property string hourStr: ""
+            property string minStr: ""
+            property string dateShortStr: ""
             property string fullDateStr: ""
             property int typeInIndex: 0
             property string dateStr: fullDateStr.substring(0, typeInIndex)
@@ -597,6 +621,9 @@ Variants {
                 onTriggered: {
                     let d = new Date();
                     barWindow.timeStr = Qt.formatDateTime(d, "HH:mm:ss");
+                    barWindow.hourStr = Qt.formatDateTime(d, "HH");
+                    barWindow.minStr = Qt.formatDateTime(d, "mm");
+                    barWindow.dateShortStr = Qt.formatDateTime(d, "dd MMM");
                     barWindow.fullDateStr = Qt.formatDateTime(d, "dddd, MMMM dd");
                     if (barWindow.typeInIndex >= barWindow.fullDateStr.length) {
                         barWindow.typeInIndex = barWindow.fullDateStr.length;
@@ -613,12 +640,16 @@ Variants {
             }
 
             Item {
+                id: barContentContainer
                 anchors.fill: parent
+                readonly property bool isVert: barWindow.topbarPosition === "left" || barWindow.topbarPosition === "right"
 
                 Rectangle {
                     id: leftContent
-                    y: (parent.height - barWindow.barHeight) / 2
-                    height: barWindow.barHeight
+                    x: barContentContainer.isVert ? (parent.width - width) / 2 : targetX
+                    y: barContentContainer.isVert ? (showLayout ? barWindow.s(4) : barWindow.s(-200)) : (parent.height - barWindow.barHeight) / 2
+                    height: barContentContainer.isVert ? (leftLayoutVert.implicitHeight + barWindow.s(16)) : barWindow.barHeight
+                    width: barContentContainer.isVert ? barWindow.barHeight : (leftLayout.width + barWindow.s(16))
 
                     color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
                     radius: barWindow.s(14)
@@ -628,12 +659,12 @@ Variants {
                     
                     property bool showLayout: false
                     
-                    opacity: (showLayout && !barWindow.isSettingsOpen) ? 1 : 0
-                    enabled: !barWindow.isSettingsOpen
+                    opacity: barContentContainer.isVert ? (showLayout ? 1 : 0) : ((showLayout && !barWindow.isSettingsOpen) ? 1 : 0)
+                    enabled: barContentContainer.isVert ? true : !barWindow.isSettingsOpen
                     
                     property real targetX: (showLayout && !barWindow.isSettingsOpen) ? 0 : barWindow.s(-200)
-                    x: targetX
                     Behavior on x { NumberAnimation { duration: 600; easing.type: Easing.OutExpo } }
+                    Behavior on y { NumberAnimation { duration: 600; easing.type: Easing.OutExpo } }
                     Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
                     
                     Timer {
@@ -642,10 +673,67 @@ Variants {
                         onTriggered: leftContent.showLayout = true
                     }
 
-                    width: leftLayout.width + barWindow.s(16)
+                    Column {
+                        id: leftLayoutVert
+                        visible: barContentContainer.isVert
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top
+                        anchors.topMargin: barWindow.s(8)
+                        spacing: barWindow.s(6)
+
+                        property int pillSize: barWindow.s(34)
+
+                        Rectangle {
+                            property bool isHovered: helpMouseV.containsMouse
+                            color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : "transparent"
+                            radius: barWindow.s(10)
+                            width: parent.pillSize
+                            height: barWindow.showHelpIcon ? parent.pillSize : 0
+                            visible: height > 0
+                            clip: true
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: barWindow.distroIcon
+                                font.family: "Iosevka Nerd Font"
+                                font.pixelSize: barWindow.s(20)
+                                color: parent.isHovered ? mocha.teal : mocha.text
+                            }
+                            MouseArea {
+                                id: helpMouseV
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle guide"])
+                            }
+                        }
+
+                        Rectangle {
+                            property bool isHovered: searchMouseV.containsMouse
+                            color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : "transparent"
+                            radius: barWindow.s(10)
+                            width: parent.pillSize
+                            height: parent.pillSize
+                            clip: true
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰍉"
+                                font.family: "Iosevka Nerd Font"
+                                font.pixelSize: barWindow.s(20)
+                                color: parent.isHovered ? mocha.mauve : mocha.text
+                            }
+                            MouseArea {
+                                id: searchMouseV
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle applauncher"])
+                            }
+                        }
+                    }
 
                     Row {
                         id: leftLayout
+                        visible: !barContentContainer.isVert
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
                         anchors.leftMargin: barWindow.s(8)
@@ -821,27 +909,28 @@ Variants {
                     id: workspacesBox
                     color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
                     radius: barWindow.s(14); border.width: 1; border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.05)
-                    height: barWindow.barHeight
-                    y: (parent.height - barWindow.barHeight) / 2
-                    clip: true
                     
-                    width: workspacesModel.count > 0 ? wsLayout.implicitWidth + barWindow.s(20) : 0
+                    x: barContentContainer.isVert ? (parent.width - width) / 2 : (defaultX + (settingsX - defaultX) * barWindow.settingsSlideProgress)
+                    y: barContentContainer.isVert ? (leftContent.y + leftContent.height + barWindow.s(6)) : ((parent.height - barWindow.barHeight) / 2)
+                    width: barContentContainer.isVert ? barWindow.barHeight : (workspacesModel.count > 0 ? wsLayout.implicitWidth + barWindow.s(20) : 0)
+                    height: barContentContainer.isVert ? (workspacesModel.count > 0 ? wsLayoutVert.implicitHeight + barWindow.s(20) : 0) : barWindow.barHeight
+                    clip: true
                     
                     property real defaultX: leftContent.x + leftContent.width + barWindow.s(4)
                     property real settingsX: mediaBox.settingsX - width - (width > 0 ? barWindow.s(4) : 0)
-                                        
-                    x: defaultX + (settingsX - defaultX) * barWindow.settingsSlideProgress
 
                     property bool limitActive: barWindow.isSettingsOpen && barWindow.isMediaActive
 
-                    visible: width > 0 || opacity > 0
+                    visible: (width > 0 && height > 0) || opacity > 0
                     opacity: workspacesModel.count > 0 ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: 300 } }
 
                     Rectangle {
                         id: activeHighlight
-                        y: (workspacesBox.height - barWindow.s(32)) / 2
-                        height: barWindow.s(32)
+                        x: barContentContainer.isVert ? (workspacesBox.width - barWindow.s(32)) / 2 : actualLeft
+                        y: barContentContainer.isVert ? actualLeft : ((workspacesBox.height - barWindow.s(32)) / 2)
+                        width: barContentContainer.isVert ? barWindow.s(32) : (actualRight - actualLeft)
+                        height: barContentContainer.isVert ? (actualRight - actualLeft) : barWindow.s(32)
                         radius: barWindow.s(10)
                         color: mocha.mauve
                         z: 0
@@ -858,9 +947,8 @@ Variants {
                             prevIdx = curIdx;
                         }
 
-                        // FIXED: Calculate step size to perfectly match the rounded width + rounded spacing of the Row elements.
                         property real stepSize: barWindow.s(32) + barWindow.s(6)
-                        property real targetLeft: wsLayout.x + (curIdx * stepSize)
+                        property real targetLeft: (barContentContainer.isVert ? wsLayoutVert.y : wsLayout.x) + (curIdx * stepSize)
                         property real targetRight: targetLeft + barWindow.s(32)
 
                         property real actualLeft: targetLeft
@@ -869,13 +957,44 @@ Variants {
                         Behavior on actualLeft { NumberAnimation { id: leftAnim; duration: 250; easing.type: Easing.OutExpo } }
                         Behavior on actualRight { NumberAnimation { id: rightAnim; duration: 250; easing.type: Easing.OutExpo } }
 
-                        x: actualLeft
-                        width: actualRight - actualLeft
                         opacity: workspacesModel.count > 0 ? 1 : 0
+                    }
+
+                    Column {
+                        id: wsLayoutVert
+                        visible: barContentContainer.isVert
+                        anchors.centerIn: parent
+                        spacing: barWindow.s(6)
+                        
+                        Repeater {
+                            model: workspacesModel
+                            delegate: Rectangle {
+                                width: barWindow.s(32)
+                                height: barWindow.s(32)
+                                radius: barWindow.s(10)
+                                color: wsPillMouseV.containsMouse ? Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.1) : (model.wsState === "occupied" ? Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.15) : "transparent")
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: model.wsId
+                                    font.family: "JetBrains Mono"
+                                    font.pixelSize: barWindow.s(13)
+                                    font.weight: model.wsState === "active" ? Font.Black : Font.Bold
+                                    color: model.wsState === "active" ? mocha.base : (model.wsState === "occupied" ? mocha.text : mocha.subtext0)
+                                }
+                                MouseArea {
+                                    id: wsPillMouseV
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh " + model.wsId])
+                                }
+                            }
+                        }
                     }
 
                     Row {
                         id: wsLayout
+                        visible: !barContentContainer.isVert
                         anchors.centerIn: parent
                         spacing: barWindow.s(6)
                         
@@ -1100,18 +1219,17 @@ Variants {
                     color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.95) : Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
                     radius: barWindow.s(14); border.width: 1; border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, isHovered ? 0.15 : 0.05)
                     
-                    y: (parent.height - barWindow.barHeight) / 2
-                    height: barWindow.barHeight
-                    
-                    width: centerLayout.implicitWidth + barWindow.s(36)
+                    x: barContentContainer.isVert ? (parent.width - width) / 2 : (defaultX + (settingsX - defaultX) * barWindow.settingsSlideProgress)
+                    y: barContentContainer.isVert ? (workspacesBox.y + workspacesBox.height + barWindow.s(6)) : ((parent.height - barWindow.barHeight) / 2)
+                    width: barContentContainer.isVert ? barWindow.barHeight : (centerLayout.implicitWidth + barWindow.s(36))
+                    height: barContentContainer.isVert ? (centerLayoutVert.implicitHeight + barWindow.s(20)) : barWindow.barHeight
                     Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutExpo } }
+                    Behavior on height { NumberAnimation { duration: 400; easing.type: Easing.OutExpo } }
                     
                     property real pureCenter: (parent.width - width) / 2
                     property real minCenterDefaultX: mediaBox.defaultX + mediaBox.width + (mediaBox.width > 0 ? barWindow.s(4) : 0)
                     property real settingsX: barWindow.width - rightContent.width - width - barWindow.s(4)
                     property real defaultX: Math.max(minCenterDefaultX, pureCenter)
-                    
-                    x: defaultX + (settingsX - defaultX) * barWindow.settingsSlideProgress
                     
                     property bool showLayout: false
                     opacity: showLayout ? 1 : 0
@@ -1139,8 +1257,73 @@ Variants {
                         onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle calendar"])
                     }
 
+                    ColumnLayout {
+                        id: centerLayoutVert
+                        visible: barContentContainer.isVert
+                        anchors.centerIn: parent
+                        spacing: barWindow.s(2)
+
+                        Text { 
+                            text: barWindow.hourStr !== "" ? barWindow.hourStr : "12"
+                            Layout.alignment: Qt.AlignHCenter 
+                            font.family: "JetBrains Mono" 
+                            font.pixelSize: barWindow.s(16) 
+                            font.weight: Font.Black 
+                            color: mocha.blue 
+                        }
+                        Text { 
+                            text: barWindow.minStr !== "" ? barWindow.minStr : "00"
+                            Layout.alignment: Qt.AlignHCenter 
+                            font.family: "JetBrains Mono" 
+                            font.pixelSize: barWindow.s(16) 
+                            font.weight: Font.Black 
+                            color: mocha.mauve 
+                        }
+
+                        Rectangle {
+                            Layout.alignment: Qt.AlignHCenter
+                            width: barWindow.s(18)
+                            height: 1
+                            color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.15)
+                        }
+
+                        Text { 
+                            text: barWindow.dateShortStr 
+                            Layout.alignment: Qt.AlignHCenter 
+                            font.family: "JetBrains Mono" 
+                            font.pixelSize: barWindow.s(9) 
+                            font.weight: Font.Bold 
+                            color: mocha.subtext0 
+                        }
+
+                        Rectangle {
+                            Layout.alignment: Qt.AlignHCenter
+                            width: barWindow.s(18)
+                            height: 1
+                            color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.15)
+                        }
+
+                        Text { 
+                            text: barWindow.weatherIcon 
+                            Layout.alignment: Qt.AlignHCenter 
+                            font.family: "Iosevka Nerd Font" 
+                            font.pixelSize: barWindow.s(18) 
+                            color: Qt.tint(barWindow.weatherHex, Qt.rgba(mocha.mauve.r, mocha.mauve.g, mocha.mauve.b, 0.4)) 
+                        }
+
+                        Text { 
+                            text: barWindow.weatherTemp.replace("°C", "°").replace("°F", "°") 
+                            Layout.alignment: Qt.AlignHCenter 
+                            font.family: "JetBrains Mono" 
+                            font.pixelSize: barWindow.s(10) 
+                            font.weight: Font.Black 
+                            color: mocha.peach 
+                        }
+                    }
+
                     RowLayout {
                         id: centerLayout
+                        visible: !barContentContainer.isVert
                         anchors.centerIn: parent
                         spacing: barWindow.s(24)
 
@@ -1171,8 +1354,331 @@ Variants {
                     }
                 }
 
+                Column {
+                    id: rightContentVert
+                    visible: barContentContainer.isVert
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: barWindow.s(6)
+                    spacing: barWindow.s(6)
+
+                    // 0. Recording Indicator Button (Vertical Mode)
+                    Rectangle {
+                        id: recBoxVertContainer
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        property bool isHovered: recMouseV.containsMouse
+
+                        color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.95) : Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
+                        radius: barWindow.s(14)
+                        border.width: 1
+                        border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, isHovered ? 0.15 : 0.05)
+
+                        property real targetHeight: barWindow.isRecording ? barWindow.barHeight : 0
+                        width: barWindow.barHeight
+                        height: targetHeight
+
+                        visible: targetHeight > 0 || opacity > 0
+                        opacity: barWindow.isRecording ? 1.0 : 0.0
+                        clip: true
+
+                        Behavior on height { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+                        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+                        scale: isHovered ? 1.05 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        Text {
+                            id: recIconV
+                            anchors.centerIn: parent
+                            text: ""
+                            font.family: "Iosevka Nerd Font"
+                            font.pixelSize: barWindow.s(20)
+                            color: mocha.red
+
+                            SequentialAnimation on opacity {
+                                running: barWindow.isRecording && !recMouseV.containsMouse
+                                loops: Animation.Infinite
+                                NumberAnimation { to: 0.3; duration: 600; easing.type: Easing.InOutSine }
+                                NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+                            }
+                            SequentialAnimation on scale {
+                                running: barWindow.isRecording && !recMouseV.containsMouse
+                                loops: Animation.Infinite
+                                NumberAnimation { to: 1.15; duration: 600; easing.type: Easing.InOutSine }
+                                NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+                            }
+                        }
+
+                        MouseArea {
+                            id: recMouseV
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: {
+                                barWindow.isRecording = false;
+                                Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/screenshot.sh"]);
+                            }
+                        }
+                    }
+
+                    // 1. Separate Card for System Tray Items
+                    Rectangle {
+                        id: trayBoxVertContainer
+                        visible: trayRepeaterV.count > 0
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: barWindow.barHeight
+                        height: trayLayoutV.implicitHeight + barWindow.s(16)
+
+                        color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
+                        radius: barWindow.s(14)
+                        border.width: 1
+                        border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
+                        clip: true
+
+                        Column {
+                            id: trayLayoutV
+                            anchors.centerIn: parent
+                            spacing: barWindow.s(6)
+
+                            Repeater {
+                                id: trayRepeaterV
+                                model: SystemTray.items
+                                delegate: Rectangle {
+                                    id: trayItemV
+                                    width: barWindow.s(40)
+                                    height: barWindow.s(40)
+                                    radius: barWindow.s(10)
+                                    border.width: 1
+                                    border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
+                                    color: trayMouseV.containsMouse ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
+
+                                    Image {
+                                        id: trayIconV
+                                        anchors.centerIn: parent
+                                        source: modelData.icon || ""
+                                        fillMode: Image.PreserveAspectFit
+                                        width: barWindow.s(18)
+                                        height: barWindow.s(18)
+                                    }
+
+                                    QsMenuAnchor {
+                                        id: menuAnchorV
+                                        anchor.window: barWindow
+                                        anchor.item: trayIconV
+                                        menu: modelData.menu
+                                    }
+
+                                    MouseArea {
+                                        id: trayMouseV
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                                        onClicked: mouse => {
+                                            if (mouse.button === Qt.LeftButton) {
+                                                if (modelData.isMenuOnly || modelData.onlyMenu) {
+                                                    menuAnchorV.open();
+                                                } else if (typeof modelData.activate === "function") {
+                                                    modelData.activate();
+                                                }
+                                            } else if (mouse.button === Qt.MiddleButton) {
+                                                if (typeof modelData.secondaryActivate === "function") {
+                                                    modelData.secondaryActivate();
+                                                }
+                                            } else if (mouse.button === Qt.RightButton) {
+                                                if (modelData.menu) {
+                                                    menuAnchorV.open();
+                                                } else if (typeof modelData.contextMenu === "function") {
+                                                    modelData.contextMenu(mouse.x, mouse.y);
+                                                } else {
+                                                    modelData.activate();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. Separate Card for System Action Buttons (Wifi, Volume, Battery, Settings)
+                    Rectangle {
+                        id: sysBoxVertContainer
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: barWindow.barHeight
+                        height: sysContentVertLayout.implicitHeight + barWindow.s(16)
+
+                        color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
+                        radius: barWindow.s(14)
+                        border.width: 1
+                        border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
+                        clip: true
+
+                        Column {
+                            id: sysContentVertLayout
+                            anchors.centerIn: parent
+                            spacing: barWindow.s(6)
+
+                            // Network / Wifi Button
+                            Rectangle {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: barWindow.s(40)
+                                height: barWindow.s(36)
+                                radius: barWindow.s(10)
+                                border.width: 1
+                                border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
+                                color: wifiMouseV.containsMouse ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
+                                clip: true
+
+                                 Rectangle {
+                                    anchors.fill: parent
+                                    radius: barWindow.s(10)
+                                    opacity: barWindow.showEthernet ? (barWindow.ethStatus === "Connected" ? 1.0 : 0.0) : (barWindow.isWifiOn ? 1.0 : 0.0)
+                                    Behavior on opacity { NumberAnimation { duration: 300 } }
+                                    color: mocha.blue
+                                }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: barWindow.showEthernet ? "󰈀" : (barWindow.wifiIcon !== "" ? barWindow.wifiIcon : "󰤨")
+                                    font.family: "Iosevka Nerd Font"
+                                    font.pixelSize: barWindow.s(17)
+                                    color: (barWindow.showEthernet ? barWindow.ethStatus === "Connected" : barWindow.isWifiOn) ? mocha.base : mocha.subtext0
+                                }
+                                MouseArea {
+                                    id: wifiMouseV
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle network wifi"])
+                                }
+                            }
+
+                            // Volume Button (With Percentage Indicator e.g. 41%)
+                            Rectangle {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: barWindow.s(40)
+                                height: barWindow.s(52)
+                                radius: barWindow.s(10)
+                                border.width: 1
+                                border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
+                                color: volMouseV.containsMouse ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
+                                clip: true
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: barWindow.s(10)
+                                    opacity: barWindow.isSoundActive ? 1.0 : 0.0
+                                    Behavior on opacity { NumberAnimation { duration: 300 } }
+                                    color: mocha.peach
+                                }
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 1
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: barWindow.volIcon
+                                        font.family: "Iosevka Nerd Font"
+                                        font.pixelSize: barWindow.s(16)
+                                        color: barWindow.isSoundActive ? mocha.base : (barWindow.isMuted ? mocha.red : mocha.blue)
+                                    }
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: barWindow.volPercent !== "" ? barWindow.volPercent : "0%"
+                                        font.family: "JetBrains Mono"
+                                        font.pixelSize: barWindow.s(11.5)
+                                        font.weight: Font.Black
+                                        color: barWindow.isSoundActive ? mocha.base : mocha.text
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: volMouseV
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle volume"])
+                                }
+                            }
+
+                            // Battery Button (With Percentage Indicator e.g. 99%)
+                            Rectangle {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: barWindow.s(40)
+                                height: barWindow.s(52)
+                                radius: barWindow.s(10)
+                                border.width: 1
+                                border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
+                                color: batMouseV.containsMouse ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
+                                clip: true
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: barWindow.s(10)
+                                    opacity: 1.0
+                                    Behavior on opacity { NumberAnimation { duration: 300 } }
+                                    color: barWindow.isDesktop ? mocha.red : barWindow.batDynamicColor
+                                }
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 1
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: barWindow.batIcon
+                                        font.family: "Iosevka Nerd Font"
+                                        font.pixelSize: barWindow.s(16)
+                                        color: mocha.base
+                                    }
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: barWindow.batPercent !== "" ? barWindow.batPercent : "100%"
+                                        font.family: "JetBrains Mono"
+                                        font.pixelSize: barWindow.s(11.5)
+                                        font.weight: Font.Black
+                                        color: mocha.base
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: batMouseV
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle battery"])
+                                }
+                            }
+
+                            // Settings Button
+                            Rectangle {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: barWindow.s(40)
+                                height: barWindow.s(36)
+                                radius: barWindow.s(10)
+                                border.width: 1
+                                border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
+                                color: sysMouseV.containsMouse ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: ""
+                                    font.family: "Iosevka Nerd Font"
+                                    font.pixelSize: barWindow.s(17)
+                                    color: sysMouseV.containsMouse ? mocha.mauve : mocha.text
+                                }
+                                MouseArea {
+                                    id: sysMouseV
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle settings"])
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Row {
                     id: rightContent
+                    visible: !barContentContainer.isVert
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: barWindow.s(4)
@@ -1343,16 +1849,12 @@ Variants {
                                 color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
                                 clip: true
                                 
-                                Rectangle {
+                                 Rectangle {
                                     anchors.fill: parent
                                     radius: barWindow.s(10)
                                     opacity: barWindow.showEthernet ? (barWindow.ethStatus === "Connected" ? 1.0 : 0.0) : (barWindow.isWifiOn ? 1.0 : 0.0)
                                     Behavior on opacity { NumberAnimation { duration: 300 } }
-                                    gradient: Gradient {
-                                        orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: mocha.blue }
-                                        GradientStop { position: 1.0; color: Qt.lighter(mocha.blue, 1.3) }
-                                    }
+                                    color: mocha.blue
                                 }
 
                                 property real targetWidth: wifiLayoutRow.implicitWidth + barWindow.s(24)
@@ -1406,11 +1908,7 @@ Variants {
                                     radius: barWindow.s(10)
                                     opacity: barWindow.isBtOn ? 1.0 : 0.0
                                     Behavior on opacity { NumberAnimation { duration: 300 } }
-                                    gradient: Gradient {
-                                        orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: mocha.mauve }
-                                        GradientStop { position: 1.0; color: Qt.lighter(mocha.mauve, 1.3) }
-                                    }
+                                    color: mocha.mauve
                                 }
 
                                 property real targetWidth: barWindow.isDesktop ? 0 : btLayoutRow.implicitWidth + barWindow.s(24)
@@ -1459,11 +1957,7 @@ Variants {
                                     radius: barWindow.s(10)
                                     opacity: barWindow.isSoundActive ? 1.0 : 0.0
                                     Behavior on opacity { NumberAnimation { duration: 300 } }
-                                    gradient: Gradient {
-                                        orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: mocha.peach }
-                                        GradientStop { position: 1.0; color: Qt.lighter(mocha.peach, 1.3) }
-                                    }
+                                    color: mocha.peach
                                 }
                                 
                                 property real targetWidth: volLayoutRow.implicitWidth + barWindow.s(24)
@@ -1512,11 +2006,7 @@ Variants {
                                     radius: barWindow.s(10)
                                     opacity: 1.0 
                                     Behavior on opacity { NumberAnimation { duration: 300 } }
-                                    gradient: Gradient {
-                                        orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: barWindow.isDesktop ? mocha.red : barWindow.batDynamicColor; Behavior on color { ColorAnimation { duration: 300 } } }
-                                        GradientStop { position: 1.0; color: barWindow.isDesktop ? Qt.lighter(mocha.red, 1.3) : Qt.lighter(barWindow.batDynamicColor, 1.3); Behavior on color { ColorAnimation { duration: 300 } } }
-                                    }
+                                    color: barWindow.isDesktop ? mocha.red : barWindow.batDynamicColor
                                 }
                                 
                                 property real targetWidth: barWindow.isDesktop ? barWindow.s(34) : batLayoutRow.implicitWidth + barWindow.s(24)
