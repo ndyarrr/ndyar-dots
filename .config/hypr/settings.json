@@ -4,6 +4,7 @@
   "topbarHelpIcon": true,
   "workspaceCount": 8,
   "topbarPosition": "top",
+  "networkUiMode": "current",
   "wifiUiMode": "current",
   "btUiMode": "current",
   "wallpaperDir": "/home/ndyar/Pictures/Wallpapers",
@@ -129,6 +130,30 @@
       "key": "T",
       "dispatcher": "exec",
       "command": "python3 ~/.config/hypr/scripts/infinite_desktop/floating_tile_toggle.py",
+      "isEditing": false
+    },
+    {
+      "type": "bind",
+      "mods": "SUPER",
+      "key": "equal",
+      "dispatcher": "exec",
+      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/zoom_canvas.py in",
+      "isEditing": false
+    },
+    {
+      "type": "bind",
+      "mods": "SUPER",
+      "key": "minus",
+      "dispatcher": "exec",
+      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/zoom_canvas.py out",
+      "isEditing": false
+    },
+    {
+      "type": "bind",
+      "mods": "SUPER",
+      "key": "backslash",
+      "dispatcher": "exec",
+      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/zoom_canvas.py reset",
       "isEditing": false
     },
     {

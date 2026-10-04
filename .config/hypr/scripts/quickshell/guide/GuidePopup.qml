@@ -228,6 +228,7 @@ Item {
     property var tabIcons: ["", "", "󰣆", "󰏘", "󰍹"]
 
     property string currentTopbarPos: "top"
+    property string networkUiMode: "current"
     property string wifiUiMode: "current"
     property string btUiMode: "current"
 
@@ -239,34 +240,32 @@ Item {
         ]);
     }
 
-    function setWifiUiMode(mode) {
+    function setNetworkUiMode(mode) {
+        root.networkUiMode = mode;
         root.wifiUiMode = mode;
-        Quickshell.execDetached([
-            "bash", "-c",
-            "python3 -c \"import json, os; p=os.path.expanduser('~/.config/hypr/settings.json'); f=open(p,'r+'); d=json.load(f); d['wifiUiMode']='" + mode + "'; f.seek(0); json.dump(d,f,indent=2); f.truncate()\""
-        ]);
-    }
-
-    function setBtUiMode(mode) {
         root.btUiMode = mode;
         Quickshell.execDetached([
             "bash", "-c",
-            "python3 -c \"import json, os; p=os.path.expanduser('~/.config/hypr/settings.json'); f=open(p,'r+'); d=json.load(f); d['btUiMode']='" + mode + "'; f.seek(0); json.dump(d,f,indent=2); f.truncate()\""
+            "python3 -c \"import json, os; p=os.path.expanduser('~/.config/hypr/settings.json'); f=open(p,'r+'); d=json.load(f); d['networkUiMode']='" + mode + "'; d['wifiUiMode']='" + mode + "'; d['btUiMode']='" + mode + "'; f.seek(0); json.dump(d,f,indent=2); f.truncate()\""
         ]);
     }
 
+    function setWifiUiMode(mode) { setNetworkUiMode(mode); }
+    function setBtUiMode(mode) { setNetworkUiMode(mode); }
+
     Process {
         id: posReader
-        command: ["bash", "-c", "python3 -c \"import json, os; d=json.load(open(os.path.expanduser('~/.config/hypr/settings.json'))); print(d.get('topbarPosition','top') + '|' + d.get('wifiUiMode','current') + '|' + d.get('btUiMode','current'))\" 2>/dev/null || echo 'top|current|current'"]
+        command: ["bash", "-c", "python3 -c \"import json, os; d=json.load(open(os.path.expanduser('~/.config/hypr/settings.json'))); print(d.get('topbarPosition','top') + '|' + d.get('networkUiMode', d.get('wifiUiMode','current')) + '|' + d.get('wifiUiMode','current') + '|' + d.get('btUiMode','current'))\" 2>/dev/null || echo 'top|current|current|current'"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
                 let txt = this.text ? this.text.trim() : "";
                 let parts = txt.split("|");
-                if (parts.length >= 3) {
+                if (parts.length >= 4) {
                     root.currentTopbarPos = parts[0];
-                    root.wifiUiMode = parts[1];
-                    root.btUiMode = parts[2];
+                    root.networkUiMode = parts[1];
+                    root.wifiUiMode = parts[2];
+                    root.btUiMode = parts[3];
                 }
             }
         }
@@ -1678,7 +1677,7 @@ Item {
                             }
                         }
 
-                        // 2. WiFi UI Mode Row
+                        // 2. Network & Bluetooth UI Mode Row
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: root.s(68)
@@ -1703,8 +1702,8 @@ Item {
 
                                 ColumnLayout {
                                     spacing: root.s(2)
-                                    Text { text: "WiFi UI Style"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(13); color: root.text }
-                                    Text { text: "Gaya tampilan panel popup WiFi"; font.family: "JetBrains Mono"; font.pixelSize: root.s(10); color: root.subtext0 }
+                                    Text { text: "Network & Bluetooth UI Style"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(13); color: root.text }
+                                    Text { text: "Gaya tampilan panel popup WiFi, Ethernet, dan Bluetooth"; font.family: "JetBrains Mono"; font.pixelSize: root.s(10); color: root.subtext0 }
                                 }
 
                                 Item { Layout.fillWidth: true }
@@ -1720,8 +1719,8 @@ Item {
                                             width: root.s(85)
                                             height: root.s(34)
                                             radius: root.s(8)
-                                            property bool isSelected: root.wifiUiMode === modelData.modeKey
-                                            color: isSelected ? root.sapphire : (wifiMa.containsMouse ? Qt.alpha(root.surface1, 0.8) : root.surface0)
+                                            property bool isSelected: (root.networkUiMode === modelData.modeKey || root.wifiUiMode === modelData.modeKey)
+                                            color: isSelected ? root.sapphire : (netMa.containsMouse ? Qt.alpha(root.surface1, 0.8) : root.surface0)
                                             border.color: isSelected ? root.sapphire : root.surface1
                                             border.width: 1
 
@@ -1733,11 +1732,11 @@ Item {
                                             }
 
                                             MouseArea {
-                                                id: wifiMa
+                                                id: netMa
                                                 anchors.fill: parent
                                                 hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
-                                                onClicked: root.setWifiUiMode(modelData.modeKey)
+                                                onClicked: root.setNetworkUiMode(modelData.modeKey)
                                             }
                                         }
                                     }
@@ -1745,74 +1744,7 @@ Item {
                             }
                         }
 
-                        // 3. Bluetooth UI Mode Row
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: root.s(68)
-                            radius: root.s(12)
-                            color: Qt.alpha(root.surface0, 0.4)
-                            border.color: root.surface1
-                            border.width: 1
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: root.s(15)
-                                anchors.rightMargin: root.s(15)
-                                spacing: root.s(15)
-
-                                Rectangle {
-                                    width: root.s(38)
-                                    height: root.s(38)
-                                    radius: root.s(9)
-                                    color: Qt.alpha(root.mauve, 0.2)
-                                    Text { anchors.centerIn: parent; text: "󰂯"; font.family: "Iosevka Nerd Font"; font.pixelSize: root.s(18); color: root.mauve }
-                                }
-
-                                ColumnLayout {
-                                    spacing: root.s(2)
-                                    Text { text: "Bluetooth UI Style"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(13); color: root.text }
-                                    Text { text: "Gaya tampilan panel popup Bluetooth"; font.family: "JetBrains Mono"; font.pixelSize: root.s(10); color: root.subtext0 }
-                                }
-
-                                Item { Layout.fillWidth: true }
-
-                                RowLayout {
-                                    spacing: root.s(6)
-                                    Repeater {
-                                        model: [
-                                            { name: "Modern", modeKey: "current", icon: "󰒋" },
-                                            { name: "Formal", modeKey: "formal", icon: "󰘚" }
-                                        ]
-                                        delegate: Rectangle {
-                                            width: root.s(85)
-                                            height: root.s(34)
-                                            radius: root.s(8)
-                                            property bool isSelected: root.btUiMode === modelData.modeKey
-                                            color: isSelected ? root.mauve : (btMa.containsMouse ? Qt.alpha(root.surface1, 0.8) : root.surface0)
-                                            border.color: isSelected ? root.mauve : root.surface1
-                                            border.width: 1
-
-                                            RowLayout {
-                                                anchors.centerIn: parent
-                                                spacing: root.s(4)
-                                                Text { text: modelData.icon; font.family: "Iosevka Nerd Font"; font.pixelSize: root.s(11); color: isSelected ? root.base : root.text }
-                                                Text { text: modelData.name; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(11); color: isSelected ? root.base : root.text }
-                                            }
-
-                                            MouseArea {
-                                                id: btMa
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                cursorShape: Qt.PointingHandCursor
-                                                onClicked: root.setBtUiMode(modelData.modeKey)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // 4. Upcoming Settings Section
+                        // 3. Upcoming Settings Section
                         Text {
                             text: "Settings Lainnya (Mendatang)"
                             font.family: "JetBrains Mono"

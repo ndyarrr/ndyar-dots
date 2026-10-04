@@ -9,33 +9,22 @@ hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 -- ───────── Dynamic Settings Binds ─────────
 hl.bind([[SUPER + Z]], hl.dsp.window.close())
 hl.bind([[SHIFT + SUPER + F]], hl.dsp.window.float({ action = "toggle" }))
--- ──────── Window Navigation (Infinite Desktop aware) ────────
--- SUPER + Arrows: navigate floating windows on the infinite canvas / tiled focus
-hl.bind([[SUPER + left]],  hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py left]]))
+hl.bind([[SHIFT + SUPER + left]], hl.dsp.exec_cmd([[hyprctl dispatch resizeactive -50 0]]), { repeating = true })
+hl.bind([[SHIFT + SUPER + right]], hl.dsp.exec_cmd([[hyprctl dispatch resizeactive 50 0]]), { repeating = true })
+hl.bind([[SHIFT + SUPER + up]], hl.dsp.exec_cmd([[hyprctl dispatch resizeactive 0 -50]]), { repeating = true })
+hl.bind([[SHIFT + SUPER + down]], hl.dsp.exec_cmd([[hyprctl dispatch resizeactive 0 50]]), { repeating = true })
+hl.bind([[CTRL + SUPER + left]], hl.dsp.exec_cmd([[hyprctl dispatch movewindow l]]))
+hl.bind([[CTRL + SUPER + right]], hl.dsp.exec_cmd([[hyprctl dispatch movewindow r]]))
+hl.bind([[CTRL + SUPER + up]], hl.dsp.exec_cmd([[hyprctl dispatch movewindow u]]))
+hl.bind([[CTRL + SUPER + down]], hl.dsp.exec_cmd([[hyprctl dispatch movewindow d]]))
+hl.bind([[SUPER + left]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py left]]))
 hl.bind([[SUPER + right]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py right]]))
-hl.bind([[SUPER + up]],   hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py up]]))
-hl.bind([[SUPER + down]],  hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py down]]))
-
--- SUPER + SHIFT + Arrows: move floating window (pixel step) / resize tiled
-hl.bind([[SHIFT + SUPER + left]],  hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/move_window.py left]]),  { repeating = true })
-hl.bind([[SHIFT + SUPER + right]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/move_window.py right]]), { repeating = true })
-hl.bind([[SHIFT + SUPER + up]],    hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/move_window.py up]]),    { repeating = true })
-hl.bind([[SHIFT + SUPER + down]],  hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/move_window.py down]]),  { repeating = true })
-
--- SUPER + ALT + Arrows: move tiled window swap
-hl.bind([[SUPER + ALT + left]],  hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/move_window_tiled.py left]]))
-hl.bind([[SUPER + ALT + right]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/move_window_tiled.py right]]))
-hl.bind([[SUPER + ALT + up]],    hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/move_window_tiled.py up]]))
-hl.bind([[SUPER + ALT + down]],  hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/move_window_tiled.py down]]))
-
--- SUPER + CTRL + Arrows: resize floating window
-hl.bind([[CTRL + SUPER + left]],  hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/resize_window.py left]]),  { repeating = true })
-hl.bind([[CTRL + SUPER + right]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/resize_window.py right]]), { repeating = true })
-hl.bind([[CTRL + SUPER + up]],    hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/resize_window.py up]]),    { repeating = true })
-hl.bind([[CTRL + SUPER + down]],  hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/resize_window.py down]]),  { repeating = true })
-
--- SUPER + T: toggle all windows floating / tiled (Infinite Desktop mode on/off)
-hl.bind([[SUPER + T]], hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/infinite_desktop/floating_tile_toggle.py"))
+hl.bind([[SUPER + up]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py up]]))
+hl.bind([[SUPER + down]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py down]]))
+hl.bind([[SUPER + T]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/floating_tile_toggle.py]]))
+hl.bind([[SUPER + equal]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/zoom_canvas.py in]]))
+hl.bind([[SUPER + minus]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/zoom_canvas.py out]]))
+hl.bind([[SUPER + backslash]], hl.dsp.exec_cmd([[python3 ~/.config/hypr/scripts/infinite_desktop/zoom_canvas.py reset]]))
 hl.bind([[SUPER + RETURN]], hl.dsp.exec_cmd([[foot]]))
 hl.bind([[SUPER + F]], hl.dsp.exec_cmd([[firefox]]))
 hl.bind([[SUPER + E]], hl.dsp.exec_cmd([[nautilus]]))

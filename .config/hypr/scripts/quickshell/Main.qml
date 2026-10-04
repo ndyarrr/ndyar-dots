@@ -323,12 +323,36 @@ PanelWindow {
         let finalW = (currentItem && currentItem.targetMasterWidth  !== undefined) ? currentItem.targetMasterWidth  : t.w;
         let finalH = (currentItem && currentItem.targetMasterHeight !== undefined) ? currentItem.targetMasterHeight : t.h;
         let finalX = t.rx;
+        let finalY = t.ry;
         if (currentItem && currentItem.targetMasterWidth !== undefined && finalW !== t.w) {
-            finalX = Math.floor((masterWindow.width / 2) - (finalW / 2));
+            if (masterWindow.currentActive === "network") {
+                if (masterWindow.topbarPosition === "bottom") {
+                    finalX = masterWindow.width - finalW - Math.round(10 * masterWindow.globalUiScale);
+                } else if (masterWindow.topbarPosition === "left") {
+                    finalX = Math.round(60 * masterWindow.globalUiScale);
+                } else if (masterWindow.topbarPosition === "right") {
+                    finalX = masterWindow.width - finalW - Math.round(60 * masterWindow.globalUiScale);
+                } else {
+                    finalX = masterWindow.width - finalW - Math.round(4 * masterWindow.globalUiScale);
+                }
+            } else {
+                finalX = Math.floor((masterWindow.width / 2) - (finalW / 2));
+            }
+        }
+        if (currentItem && currentItem.targetMasterHeight !== undefined && finalH !== t.h) {
+            if (masterWindow.currentActive === "network") {
+                if (masterWindow.topbarPosition === "bottom") {
+                    finalY = masterWindow.height - finalH - Math.round(60 * masterWindow.globalUiScale);
+                } else if (masterWindow.topbarPosition === "left" || masterWindow.topbarPosition === "right") {
+                    finalY = Math.max(Math.round(10 * masterWindow.globalUiScale), masterWindow.height - finalH - Math.round(10 * masterWindow.globalUiScale));
+                } else {
+                    finalY = Math.round(60 * masterWindow.globalUiScale);
+                }
+            }
         }
 
         masterWindow.animX = finalX;
-        masterWindow.animY = t.ry;
+        masterWindow.animY = finalY;
         masterWindow.animW = finalW;
         masterWindow.animH = finalH;
         masterWindow.targetW = finalW;
@@ -516,11 +540,33 @@ PanelWindow {
                 let dynW = currentItem.targetMasterWidth;
                 masterWindow.animW = dynW;
                 masterWindow.targetW = dynW;
-                masterWindow.animX = Math.floor((masterWindow.width / 2) - (dynW / 2));
+                if (masterWindow.currentActive === "network") {
+                    if (masterWindow.topbarPosition === "bottom") {
+                        masterWindow.animX = masterWindow.width - dynW - Math.round(10 * masterWindow.globalUiScale);
+                    } else if (masterWindow.topbarPosition === "left") {
+                        masterWindow.animX = Math.round(60 * masterWindow.globalUiScale);
+                    } else if (masterWindow.topbarPosition === "right") {
+                        masterWindow.animX = masterWindow.width - dynW - Math.round(60 * masterWindow.globalUiScale);
+                    } else {
+                        masterWindow.animX = masterWindow.width - dynW - Math.round(4 * masterWindow.globalUiScale);
+                    }
+                } else {
+                    masterWindow.animX = Math.floor((masterWindow.width / 2) - (dynW / 2));
+                }
             }
             if (currentItem.targetMasterHeight !== undefined) {
-                masterWindow.animH = currentItem.targetMasterHeight;
-                masterWindow.targetH = currentItem.targetMasterHeight;
+                let dynH = currentItem.targetMasterHeight;
+                masterWindow.animH = dynH;
+                masterWindow.targetH = dynH;
+                if (masterWindow.currentActive === "network") {
+                    if (masterWindow.topbarPosition === "bottom") {
+                        masterWindow.animY = masterWindow.height - dynH - Math.round(60 * masterWindow.globalUiScale);
+                    } else if (masterWindow.topbarPosition === "left" || masterWindow.topbarPosition === "right") {
+                        masterWindow.animY = Math.max(Math.round(10 * masterWindow.globalUiScale), masterWindow.height - dynH - Math.round(10 * masterWindow.globalUiScale));
+                    } else {
+                        masterWindow.animY = Math.round(60 * masterWindow.globalUiScale);
+                    }
+                }
             }
         }
 
