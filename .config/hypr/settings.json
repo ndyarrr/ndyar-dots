@@ -135,30 +135,6 @@
     {
       "type": "bind",
       "mods": "SUPER",
-      "key": "equal",
-      "dispatcher": "exec",
-      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/zoom_canvas.py in",
-      "isEditing": false
-    },
-    {
-      "type": "bind",
-      "mods": "SUPER",
-      "key": "minus",
-      "dispatcher": "exec",
-      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/zoom_canvas.py out",
-      "isEditing": false
-    },
-    {
-      "type": "bind",
-      "mods": "SUPER",
-      "key": "backslash",
-      "dispatcher": "exec",
-      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/zoom_canvas.py reset",
-      "isEditing": false
-    },
-    {
-      "type": "bind",
-      "mods": "SUPER",
       "key": "RETURN",
       "dispatcher": "exec",
       "command": "foot",
@@ -578,6 +554,14 @@
       "key": "TAB",
       "dispatcher": "exec",
       "command": "~/.config/hypr/scripts/focus_next_monitor.sh",
+      "isEditing": false
+    },
+    {
+      "type": "bind",
+      "mods": "SUPER",
+      "key": "grave",
+      "dispatcher": "exec",
+      "command": "hyprctl dispatch hyprexpo:expo toggle",
       "isEditing": false
     }
   ],

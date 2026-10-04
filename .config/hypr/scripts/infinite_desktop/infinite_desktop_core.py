@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
 infinite_desktop_core.py
-Ultra-smooth 120Hz Infinite 2D Canvas Engine for Hyprland (Lua API).
+Ultra-smooth 120Hz Infinite 2D Canvas Panning Engine for Hyprland (Lua API).
 Supports:
 - Middle Mouse Button Drag (Figma/Blender style)
 - SUPER + ALT + Mouse Movement Drag
 - Momentum / Inertia Glide
 - In-memory zero-latency coordinate tracking
-- Multi-Touch Touchpad Pinch In / Pinch Out Zoom
-- SUPER + Scroll Wheel Zoom
 """
 
 import sys
@@ -18,12 +16,10 @@ import time
 import subprocess
 import json
 import os
-import math
 from evdev import InputDevice, list_devices, ecodes
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from hypr_ipc import (move_window_exact_lua, resize_window_exact_lua,
-                       batch_async, hyprctl_json)
+from hypr_ipc import move_window_exact_lua, batch_async, hyprctl_json
 
 speed = float(sys.argv[1]) if len(sys.argv) > 1 else 1.0
 
@@ -32,20 +28,9 @@ EVENT_SIZE = struct.calcsize('llHHi')
 EV_SYN = 0
 EV_KEY = 1
 EV_REL = 2
-EV_ABS = 3
 
 REL_X = 0
 REL_Y = 1
-REL_WHEEL = 8
-REL_WHEEL_HI_RES = 11
-
-ABS_X = 0
-ABS_Y = 1
-ABS_MT_SLOT = 47
-ABS_MT_TOUCH_MAJOR = 48
-ABS_MT_POSITION_X = 53
-ABS_MT_POSITION_Y = 54
-ABS_MT_TRACKING_ID = 57
 
 KEY_LEFTMETA = 125
 KEY_RIGHTMETA = 126
@@ -57,15 +42,8 @@ KEY_RIGHTCTRL = 97
 BTN_LEFT = 272
 BTN_RIGHT = 273
 BTN_MIDDLE = 274
-BTN_TOUCH = 330
-BTN_TOOL_FINGER = 325
-BTN_TOOL_DOUBLETAP = 333
-BTN_TOOL_TRIPLETAP = 334
 
 STATE_FILE = "/tmp/infinite-desktop-state"
-ZOOM_STATE_FILE = "/tmp/infinite_desktop_zoom.json"
-MIN_W = 120
-MIN_H = 80
 
 lock = threading.Lock()
 
@@ -77,11 +55,9 @@ btn_middle = False
 
 acc_x = 0.0
 acc_y = 0.0
-acc_zoom = 0.0
 mouse_rel_x = 0
 mouse_rel_y = 0
 
-# Active in-memory tracked window coordinates during drag
 drag_active = False
 drag_windows = {}  # { address: [x, y] }
 active_ws_id = None
@@ -97,22 +73,6 @@ def read_inverted():
         return False
 
 
-def load_zoom_state():
-    try:
-        with open(ZOOM_STATE_FILE, "r") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-
-def save_zoom_state(state):
-    try:
-        with open(ZOOM_STATE_FILE, "w") as f:
-            json.dump(state, f, indent=2)
-    except Exception:
-        pass
-
-
 def get_monitor_scale():
     try:
         monitors = hyprctl_json(["monitors"]) or []
@@ -124,25 +84,6 @@ def get_monitor_scale():
     except Exception:
         pass
     return 1.5
-
-
-def get_monitor_center():
-    try:
-        monitors = hyprctl_json(["monitors"]) or []
-        for m in monitors:
-            if m.get("focused"):
-                scale = float(m.get("scale", 1.0))
-                log_w = int(m["width"] / scale)
-                log_h = int(m["height"] / scale)
-                reserved = m.get("reserved", [0, 0, 0, 0])
-                top_res = reserved[1] if len(reserved) > 1 else 0
-                bottom_res = reserved[3] if len(reserved) > 3 else 0
-                cx = m.get("x", 0) + (log_w // 2)
-                cy = m.get("y", 0) + top_res + ((log_h - top_res - bottom_res) // 2)
-                return int(cx), int(cy)
-    except Exception:
-        pass
-    return 960, 540
 
 
 def get_floating_windows(workspace_id):
@@ -174,15 +115,6 @@ def classify_device(path):
 
     keys = {k if isinstance(k, int) else k[0] for k in caps.get(ecodes.EV_KEY, [])}
     rels = {r if isinstance(r, int) else r[0] for r in caps.get(ecodes.EV_REL, [])}
-    abss = {a[0] if isinstance(a, tuple) else a for a in caps.get(ecodes.EV_ABS, [])}
-
-    # Touchpad / Touchscreen device
-    is_touchpad = (
-        (ecodes.BTN_TOUCH in keys or ecodes.BTN_TOOL_FINGER in keys or ecodes.BTN_TOOL_DOUBLETAP in keys)
-        and (ecodes.ABS_X in abss or ecodes.ABS_MT_POSITION_X in abss)
-    )
-    if is_touchpad:
-        return 'touchpad'
 
     is_mouse = (ecodes.REL_X in rels and ecodes.REL_Y in rels and (ecodes.BTN_LEFT in keys or ecodes.BTN_MOUSE in keys))
     if is_mouse:
@@ -199,16 +131,14 @@ def classify_device(path):
 
 
 def scan_devices():
-    keyboards, mice, touchpads = [], [], []
+    keyboards, mice = [], []
     for path in list_devices():
         kind = classify_device(path)
         if kind == 'mouse':
             mice.append(path)
         elif kind == 'keyboard':
             keyboards.append(path)
-        elif kind == 'touchpad':
-            touchpads.append(path)
-    return keyboards, mice, touchpads
+    return keyboards, mice
 
 
 def kbd_reader_device(path):
@@ -246,7 +176,7 @@ def kbd_reader_device(path):
 
 
 def mouse_reader_device(path):
-    global acc_x, acc_y, acc_zoom, btn_left, btn_middle, mouse_rel_x, mouse_rel_y
+    global acc_x, acc_y, btn_left, btn_middle, mouse_rel_x, mouse_rel_y
     try:
         fd = open(path, 'rb')
     except Exception:
@@ -275,11 +205,6 @@ def mouse_reader_device(path):
                     mouse_rel_x += value
                 elif code == REL_Y:
                     mouse_rel_y += value
-                elif code in (REL_WHEEL, REL_WHEEL_HI_RES):
-                    # SUPER + Wheel Zoom
-                    if super_pressed:
-                        step = (value / 120.0) if code == REL_WHEEL_HI_RES else float(value)
-                        acc_zoom += step * 0.12
 
                 is_panning = btn_middle or (super_pressed and alt_pressed and btn_left)
                 if is_panning:
@@ -298,91 +223,8 @@ def mouse_reader_device(path):
         pass
 
 
-def get_workspace_windows(workspace_id):
-    try:
-        clients = hyprctl_json(["clients"]) or []
-        return [
-            w for w in clients
-            if w.get("workspace", {}).get("id") == workspace_id
-        ]
-    except Exception:
-        return []
-
-
-def set_float_lua(address, is_floating):
-    val_str = "true" if is_floating else "false"
-    return f'hl.dsp.window.float({{ action = "set", value = {val_str}, window = "address:{address}" }})'
-
-
-def touchpad_reader_device(path):
-    global acc_zoom
-    try:
-        fd = open(path, 'rb')
-    except Exception:
-        return
-
-    slots = {}
-    current_slot = 0
-    prev_distance = None
-
-    while True:
-        try:
-            data = fd.read(EVENT_SIZE)
-        except Exception:
-            break
-        if not data or len(data) < EVENT_SIZE:
-            break
-        _, _, etype, code, value = struct.unpack('llHHi', data)
-
-        if etype == EV_ABS:
-            if code == ABS_MT_SLOT:
-                current_slot = value
-            elif code == ABS_MT_TRACKING_ID:
-                if value == -1:
-                    slots.pop(current_slot, None)
-                    prev_distance = None
-                else:
-                    if current_slot not in slots:
-                        slots[current_slot] = {"x": None, "y": None}
-            elif code == ABS_MT_POSITION_X:
-                if current_slot in slots:
-                    slots[current_slot]["x"] = value
-            elif code == ABS_MT_POSITION_Y:
-                if current_slot in slots:
-                    slots[current_slot]["y"] = value
-
-        elif etype == EV_SYN:
-            valid_slots = [
-                s for s in slots.values()
-                if s.get("x") is not None and s.get("y") is not None
-            ]
-            if len(valid_slots) >= 2:
-                p0 = valid_slots[0]
-                p1 = valid_slots[1]
-                dx = float(p1["x"] - p0["x"])
-                dy = float(p1["y"] - p0["y"])
-                dist = math.hypot(dx, dy)
-
-                if prev_distance is not None and prev_distance > 30.0:
-                    delta_d = dist - prev_distance
-                    if abs(delta_d) > 1.5 and abs(delta_d) < 300.0:
-                        with lock:
-                            # Pinch out (dist increases) -> Zoom In (> 0)
-                            # Pinch in (dist decreases)  -> Zoom Out (< 0)
-                            acc_zoom += delta_d * 0.0025
-                prev_distance = dist
-            else:
-                prev_distance = None
-
-    try:
-        fd.close()
-    except Exception:
-        pass
-
-
 _active_kbd_threads = {}
 _active_mouse_threads = {}
-_active_tp_threads = {}
 
 
 def device_manager():
@@ -392,7 +234,7 @@ def device_manager():
 
     while True:
         try:
-            keyboards, mice, touchpads = scan_devices()
+            keyboards, mice = scan_devices()
 
             for path in keyboards:
                 t = _active_kbd_threads.get(path)
@@ -407,13 +249,6 @@ def device_manager():
                     nt = threading.Thread(target=mouse_reader_device, args=(path,), daemon=True)
                     nt.start()
                     _active_mouse_threads[path] = nt
-
-            for path in touchpads:
-                t = _active_tp_threads.get(path)
-                if t is None or not t.is_alive():
-                    nt = threading.Thread(target=touchpad_reader_device, args=(path,), daemon=True)
-                    nt.start()
-                    _active_tp_threads[path] = nt
         except Exception:
             pass
 
@@ -422,54 +257,9 @@ def device_manager():
         time.sleep(interval)
 
 
-def apply_zoom_delta(zoom_delta):
-    ws_id = get_active_workspace_id()
-    windows = get_floating_windows(ws_id)
-    if not windows:
-        all_ws = get_workspace_windows(ws_id)
-        if all_ws:
-            float_exprs = [set_float_lua(w["address"], True) for w in all_ws]
-            from hypr_ipc import batch
-            batch(float_exprs, timeout=2)
-            windows = get_floating_windows(ws_id)
-    if not windows:
-        return
-
-    factor = max(0.5, min(1.8, 1.0 + zoom_delta))
-    cx, cy = get_monitor_center()
-
-    exprs = []
-    for w in windows:
-        addr = w["address"]
-        x, y = float(w["at"][0]), float(w["at"][1])
-        ww, wh = float(w["size"][0]), float(w["size"][1])
-
-        win_cx = x + ww / 2.0
-        win_cy = y + wh / 2.0
-
-        new_ww = max(MIN_W, int(round(ww * factor)))
-        new_wh = max(MIN_H, int(round(wh * factor)))
-
-        new_win_cx = cx + (win_cx - cx) * factor
-        new_win_cy = cy + (win_cy - cy) * factor
-
-        new_x = int(round(new_win_cx - new_ww / 2.0))
-        new_y = int(round(new_win_cy - new_wh / 2.0))
-
-        exprs.append(resize_window_exact_lua(new_ww, new_wh, addr))
-        exprs.append(move_window_exact_lua(new_x, new_y, addr))
-
-    if exprs:
-        batch_async(exprs)
-        state = load_zoom_state()
-        cur_z = state.get(str(ws_id), 1.0)
-        state[str(ws_id)] = cur_z * factor
-        save_zoom_state(state)
-
-
-def main_canvas_loop():
+def main_panning_loop():
     global drag_active, drag_windows, active_ws_id, last_vel_x, last_vel_y
-    global acc_x, acc_y, acc_zoom
+    global acc_x, acc_y
 
     while True:
         time.sleep(0.008)  # 125 Hz update loop
@@ -478,19 +268,11 @@ def main_canvas_loop():
             is_panning = btn_middle or (super_pressed and alt_pressed and btn_left)
             dx = acc_x
             dy = acc_y
-            z_delta = acc_zoom
             acc_x = 0.0
             acc_y = 0.0
-            acc_zoom = 0.0
 
-        # Zoom handling (Pinch / Wheel)
-        if abs(z_delta) > 0.003:
-            apply_zoom_delta(z_delta)
-
-        # Pan handling (Drag)
         if is_panning:
             if not drag_active:
-                # Drag started: Initialize in-memory window coordinates
                 active_ws_id = get_active_workspace_id()
                 floating = get_floating_windows(active_ws_id)
                 drag_windows = {
@@ -542,7 +324,7 @@ def main_canvas_loop():
 
 def main():
     threading.Thread(target=device_manager, daemon=True).start()
-    main_canvas_loop()
+    main_panning_loop()
 
 
 if __name__ == "__main__":

@@ -18,10 +18,9 @@ hl.config({
         inactive_opacity = 1.0,
         blur = {
             enabled = true,
-            size = 30,
-            passes = 5,
+            size = 8,
+            passes = 2,
             new_optimizations = true,
-            xray = true,
         },
         shadow = {
             enabled = false,
@@ -30,7 +29,7 @@ hl.config({
 
     input = {
         kb_layout = "us",
-        kb_options = "grp:alt_shift_toggle",
+        kb_options = "",
 
         touchpad = {
             natural_scroll = true,
@@ -60,6 +59,19 @@ hl.config({
     -- Prevents blurry/pixelated XWayland apps (Spotify, etc.) on fractional scale
     xwayland = {
         force_zero_scaling = true,
+    },
+
+    plugin = {
+        hyprexpo = {
+            columns = 3,
+            gap_size = 5,
+            bg_col = "rgb(181825)",
+            workspace_method = "center current",
+            enable_gesture = true,
+            gesture_fingers = 3,
+            gesture_distance = 300,
+            gesture_positive = false,
+        },
     },
 })
 
