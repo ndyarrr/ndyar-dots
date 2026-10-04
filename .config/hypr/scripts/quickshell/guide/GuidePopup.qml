@@ -228,6 +228,8 @@ Item {
     property var tabIcons: ["", "", "󰣆", "󰏘", "󰍹"]
 
     property string currentTopbarPos: "top"
+    property string wifiUiMode: "current"
+    property string btUiMode: "current"
 
     function setTopbarPosition(pos) {
         root.currentTopbarPos = pos;
@@ -237,14 +239,34 @@ Item {
         ]);
     }
 
+    function setWifiUiMode(mode) {
+        root.wifiUiMode = mode;
+        Quickshell.execDetached([
+            "bash", "-c",
+            "python3 -c \"import json, os; p=os.path.expanduser('~/.config/hypr/settings.json'); f=open(p,'r+'); d=json.load(f); d['wifiUiMode']='" + mode + "'; f.seek(0); json.dump(d,f,indent=2); f.truncate()\""
+        ]);
+    }
+
+    function setBtUiMode(mode) {
+        root.btUiMode = mode;
+        Quickshell.execDetached([
+            "bash", "-c",
+            "python3 -c \"import json, os; p=os.path.expanduser('~/.config/hypr/settings.json'); f=open(p,'r+'); d=json.load(f); d['btUiMode']='" + mode + "'; f.seek(0); json.dump(d,f,indent=2); f.truncate()\""
+        ]);
+    }
+
     Process {
         id: posReader
-        command: ["bash", "-c", "python3 -c \"import json, os; p=os.path.expanduser('~/.config/hypr/settings.json'); print(json.load(open(p)).get('topbarPosition','top'))\" 2>/dev/null || echo 'top'"]
+        command: ["bash", "-c", "python3 -c \"import json, os; d=json.load(open(os.path.expanduser('~/.config/hypr/settings.json'))); print(d.get('topbarPosition','top') + '|' + d.get('wifiUiMode','current') + '|' + d.get('btUiMode','current'))\" 2>/dev/null || echo 'top|current|current'"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
-                if (this.text && this.text.trim()) {
-                    root.currentTopbarPos = this.text.trim();
+                let txt = this.text ? this.text.trim() : "";
+                let parts = txt.split("|");
+                if (parts.length >= 3) {
+                    root.currentTopbarPos = parts[0];
+                    root.wifiUiMode = parts[1];
+                    root.btUiMode = parts[2];
                 }
             }
         }
@@ -529,6 +551,7 @@ Item {
                                     Behavior on color { ColorAnimation { duration: 150 } }
 
                                     RowLayout {
+                                        id: tabRowLayout
                                         anchors.fill: parent
                                         anchors.leftMargin: root.s(15)
                                         spacing: root.s(12)
@@ -536,7 +559,7 @@ Item {
                                         // The "Slide Right" text effect from snippet 2
                                         property real contentShift: parent.isActive ? root.s(6) : 0
                                         Behavior on contentShift { NumberAnimation { duration: 400; easing.type: Easing.OutExpo } }
-                                        transform: Translate { x: contentShift }
+                                        transform: Translate { x: tabRowLayout.contentShift }
                                         
                                         Item {
                                             Layout.preferredWidth: root.s(24)
@@ -703,13 +726,14 @@ Item {
             // TAB 1: SYSTEM OVERVIEW
             // ------------------------------------------
             Item {
+                id: tab1Item
                 anchors.fill: parent
                 visible: root.currentTab === 1
                 opacity: visible ? 1.0 : 0.0
                 property real slideY: visible ? 0 : root.s(10)
                 
                 Behavior on slideY { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                transform: Translate { y: slideY }
+                transform: Translate { y: tab1Item.slideY }
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
                 ListModel {
@@ -1128,13 +1152,14 @@ Item {
             // TAB 2: MODULES
             // ------------------------------------------
             Item {
+                id: tab2Item
                 anchors.fill: parent
                 visible: root.currentTab === 2
                 opacity: visible ? 1.0 : 0.0
                 property real slideY: visible ? 0 : root.s(10)
                 
                 Behavior on slideY { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                transform: Translate { y: slideY }
+                transform: Translate { y: tab2Item.slideY }
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
                 ColumnLayout {
@@ -1322,13 +1347,14 @@ Item {
             // TAB 3: MATUGEN ENGINE
             // ------------------------------------------
             Item {
+                id: tab3Item
                 anchors.fill: parent
                 visible: root.currentTab === 3
                 opacity: visible ? 1.0 : 0.0
                 property real slideY: visible ? 0 : root.s(10)
                 
                 Behavior on slideY { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                transform: Translate { y: slideY }
+                transform: Translate { y: tab3Item.slideY }
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
                 ColumnLayout {
@@ -1548,124 +1574,298 @@ Item {
             }
 
             // ------------------------------------------
-            // TAB 4: TOPBAR CONFIGURATION
+            // TAB 4: TOPBAR & UI CONFIGURATION
             // ------------------------------------------
             Item {
+                id: tab4Item
                 anchors.fill: parent
                 visible: root.currentTab === 4
                 opacity: visible ? 1.0 : 0.0
                 property real slideY: visible ? 0 : root.s(10)
-                
+
                 Behavior on slideY { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                transform: Translate { y: slideY }
+                transform: Translate { y: tab4Item.slideY }
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: root.s(25)
+                Flickable {
+                    anchors.fill: parent
+                    anchors.topMargin: root.s(15)
+                    anchors.leftMargin: root.s(20)
+                    anchors.rightMargin: root.s(20)
+                    anchors.bottomMargin: root.s(20)
+                    contentHeight: settingsCol.implicitHeight + root.s(20)
+                    clip: true
 
                     ColumnLayout {
-                        Layout.alignment: Qt.AlignHCenter
-                        spacing: root.s(6)
-                        
+                        id: settingsCol
+                        width: parent.width
+                        spacing: root.s(16)
+
                         Text {
-                            text: "Top Bar Position"
+                            text: "TopBar & UI Settings"
                             font.family: "JetBrains Mono"
                             font.weight: Font.Black
-                            font.pixelSize: root.s(22)
+                            font.pixelSize: root.s(24)
                             color: root.text
-                            Layout.alignment: Qt.AlignHCenter
                         }
 
-                        Text {
-                            text: "Select the screen position for your bar"
-                            font.family: "JetBrains Mono"
-                            font.pixelSize: root.s(13)
-                            color: root.subtext0
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                    }
+                        // 1. TopBar Position Row
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: root.s(68)
+                            radius: root.s(12)
+                            color: Qt.alpha(root.surface0, 0.4)
+                            border.color: root.surface1
+                            border.width: 1
 
-                    RowLayout {
-                        Layout.alignment: Qt.AlignHCenter
-                        spacing: root.s(20)
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: root.s(15)
+                                anchors.rightMargin: root.s(15)
+                                spacing: root.s(15)
 
-                        Repeater {
-                                model: [
-                                    { name: "Top",    posKey: "top",    icon: "↑", desc: "Top Edge" },
-                                    { name: "Bottom", posKey: "bottom", icon: "↓", desc: "Bottom Edge" },
-                                    { name: "Left",   posKey: "left",   icon: "←", desc: "Left Side" },
-                                    { name: "Right",  posKey: "right",  icon: "→", desc: "Right Side" }
-                                ]
-
-                            Rectangle {
-                                Layout.preferredWidth: root.s(140)
-                                Layout.preferredHeight: root.s(160)
-                                radius: root.s(16)
-
-                                property bool isSelected: root.currentTopbarPos === modelData.posKey
-                                property bool isHovered: posMa.containsMouse
-
-                                color: isSelected 
-                                       ? Qt.alpha(root.blue, 0.2) 
-                                       : (isHovered ? Qt.alpha(root.surface1, 0.8) : Qt.alpha(root.surface0, 0.4))
-                                border.color: isSelected 
-                                              ? root.blue 
-                                              : (isHovered ? root.subtext0 : root.surface1)
-                                border.width: isSelected ? 2 : 1
-                                scale: posMa.pressed ? 0.95 : (isHovered ? 1.05 : 1.0)
-
-                                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                                Behavior on color { ColorAnimation { duration: 200 } }
-                                Behavior on border.color { ColorAnimation { duration: 200 } }
-
-                                ColumnLayout {
-                                    anchors.centerIn: parent
-                                    spacing: root.s(12)
-
-                                    Rectangle {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        width: root.s(50)
-                                        height: root.s(50)
-                                        radius: root.s(14)
-                                        color: isSelected ? root.blue : (isHovered ? root.surface2 : root.surface1)
-                                        Behavior on color { ColorAnimation { duration: 200 } }
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: modelData.icon
-                                            font.family: "Iosevka Nerd Font"
-                                            font.pixelSize: root.s(26)
-                                            color: isSelected ? root.base : (isHovered ? root.text : root.subtext0)
-                                            Behavior on color { ColorAnimation { duration: 200 } }
-                                        }
-                                    }
-
-                                    Text {
-                                        text: modelData.name
-                                        font.family: "JetBrains Mono"
-                                        font.weight: Font.Bold
-                                        font.pixelSize: root.s(14)
-                                        color: isSelected ? root.blue : root.text
-                                        Layout.alignment: Qt.AlignHCenter
-                                    }
-
-                                    Text {
-                                        text: isSelected ? "Active" : modelData.desc
-                                        font.family: "JetBrains Mono"
-                                        font.pixelSize: root.s(11)
-                                        font.weight: isSelected ? Font.Bold : Font.Normal
-                                        color: isSelected ? root.blue : root.subtext0
-                                        Layout.alignment: Qt.AlignHCenter
-                                    }
+                                Rectangle {
+                                    width: root.s(38)
+                                    height: root.s(38)
+                                    radius: root.s(9)
+                                    color: Qt.alpha(root.blue, 0.2)
+                                    Text { anchors.centerIn: parent; text: "󰍹"; font.family: "Iosevka Nerd Font"; font.pixelSize: root.s(18); color: root.blue }
                                 }
 
-                                MouseArea {
-                                    id: posMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.setTopbarPosition(modelData.posKey)
+                                ColumnLayout {
+                                    spacing: root.s(2)
+                                    Text { text: "TopBar Position"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(13); color: root.text }
+                                    Text { text: "Lokasi bar pada layar"; font.family: "JetBrains Mono"; font.pixelSize: root.s(10); color: root.subtext0 }
+                                }
+
+                                Item { Layout.fillWidth: true }
+
+                                RowLayout {
+                                    spacing: root.s(6)
+                                    Repeater {
+                                        model: [
+                                            { name: "Top", posKey: "top", icon: "↑" },
+                                            { name: "Bottom", posKey: "bottom", icon: "↓" },
+                                            { name: "Left", posKey: "left", icon: "←" },
+                                            { name: "Right", posKey: "right", icon: "→" }
+                                        ]
+                                        delegate: Rectangle {
+                                            width: root.s(72)
+                                            height: root.s(34)
+                                            radius: root.s(8)
+                                            property bool isSelected: root.currentTopbarPos === modelData.posKey
+                                            color: isSelected ? root.blue : (btnMa.containsMouse ? Qt.alpha(root.surface1, 0.8) : root.surface0)
+                                            border.color: isSelected ? root.blue : root.surface1
+                                            border.width: 1
+
+                                            RowLayout {
+                                                anchors.centerIn: parent
+                                                spacing: root.s(4)
+                                                Text { text: modelData.icon; font.family: "Iosevka Nerd Font"; font.pixelSize: root.s(11); color: isSelected ? root.base : root.text }
+                                                Text { text: modelData.name; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(11); color: isSelected ? root.base : root.text }
+                                            }
+
+                                            MouseArea {
+                                                id: btnMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.setTopbarPosition(modelData.posKey)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 2. WiFi UI Mode Row
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: root.s(68)
+                            radius: root.s(12)
+                            color: Qt.alpha(root.surface0, 0.4)
+                            border.color: root.surface1
+                            border.width: 1
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: root.s(15)
+                                anchors.rightMargin: root.s(15)
+                                spacing: root.s(15)
+
+                                Rectangle {
+                                    width: root.s(38)
+                                    height: root.s(38)
+                                    radius: root.s(9)
+                                    color: Qt.alpha(root.sapphire, 0.2)
+                                    Text { anchors.centerIn: parent; text: "󰤨"; font.family: "Iosevka Nerd Font"; font.pixelSize: root.s(18); color: root.sapphire }
+                                }
+
+                                ColumnLayout {
+                                    spacing: root.s(2)
+                                    Text { text: "WiFi UI Style"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(13); color: root.text }
+                                    Text { text: "Gaya tampilan panel popup WiFi"; font.family: "JetBrains Mono"; font.pixelSize: root.s(10); color: root.subtext0 }
+                                }
+
+                                Item { Layout.fillWidth: true }
+
+                                RowLayout {
+                                    spacing: root.s(6)
+                                    Repeater {
+                                        model: [
+                                            { name: "Modern", modeKey: "current", icon: "󰒋" },
+                                            { name: "Formal", modeKey: "formal", icon: "󰘚" }
+                                        ]
+                                        delegate: Rectangle {
+                                            width: root.s(85)
+                                            height: root.s(34)
+                                            radius: root.s(8)
+                                            property bool isSelected: root.wifiUiMode === modelData.modeKey
+                                            color: isSelected ? root.sapphire : (wifiMa.containsMouse ? Qt.alpha(root.surface1, 0.8) : root.surface0)
+                                            border.color: isSelected ? root.sapphire : root.surface1
+                                            border.width: 1
+
+                                            RowLayout {
+                                                anchors.centerIn: parent
+                                                spacing: root.s(4)
+                                                Text { text: modelData.icon; font.family: "Iosevka Nerd Font"; font.pixelSize: root.s(11); color: isSelected ? root.base : root.text }
+                                                Text { text: modelData.name; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(11); color: isSelected ? root.base : root.text }
+                                            }
+
+                                            MouseArea {
+                                                id: wifiMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.setWifiUiMode(modelData.modeKey)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. Bluetooth UI Mode Row
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: root.s(68)
+                            radius: root.s(12)
+                            color: Qt.alpha(root.surface0, 0.4)
+                            border.color: root.surface1
+                            border.width: 1
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: root.s(15)
+                                anchors.rightMargin: root.s(15)
+                                spacing: root.s(15)
+
+                                Rectangle {
+                                    width: root.s(38)
+                                    height: root.s(38)
+                                    radius: root.s(9)
+                                    color: Qt.alpha(root.mauve, 0.2)
+                                    Text { anchors.centerIn: parent; text: "󰂯"; font.family: "Iosevka Nerd Font"; font.pixelSize: root.s(18); color: root.mauve }
+                                }
+
+                                ColumnLayout {
+                                    spacing: root.s(2)
+                                    Text { text: "Bluetooth UI Style"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(13); color: root.text }
+                                    Text { text: "Gaya tampilan panel popup Bluetooth"; font.family: "JetBrains Mono"; font.pixelSize: root.s(10); color: root.subtext0 }
+                                }
+
+                                Item { Layout.fillWidth: true }
+
+                                RowLayout {
+                                    spacing: root.s(6)
+                                    Repeater {
+                                        model: [
+                                            { name: "Modern", modeKey: "current", icon: "󰒋" },
+                                            { name: "Formal", modeKey: "formal", icon: "󰘚" }
+                                        ]
+                                        delegate: Rectangle {
+                                            width: root.s(85)
+                                            height: root.s(34)
+                                            radius: root.s(8)
+                                            property bool isSelected: root.btUiMode === modelData.modeKey
+                                            color: isSelected ? root.mauve : (btMa.containsMouse ? Qt.alpha(root.surface1, 0.8) : root.surface0)
+                                            border.color: isSelected ? root.mauve : root.surface1
+                                            border.width: 1
+
+                                            RowLayout {
+                                                anchors.centerIn: parent
+                                                spacing: root.s(4)
+                                                Text { text: modelData.icon; font.family: "Iosevka Nerd Font"; font.pixelSize: root.s(11); color: isSelected ? root.base : root.text }
+                                                Text { text: modelData.name; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(11); color: isSelected ? root.base : root.text }
+                                            }
+
+                                            MouseArea {
+                                                id: btMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.setBtUiMode(modelData.modeKey)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 4. Upcoming Settings Section
+                        Text {
+                            text: "Settings Lainnya (Mendatang)"
+                            font.family: "JetBrains Mono"
+                            font.weight: Font.Bold
+                            font.pixelSize: root.s(14)
+                            color: root.subtext0
+                            Layout.topMargin: root.s(8)
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: root.s(10)
+                            columnSpacing: root.s(10)
+
+                            Repeater {
+                                model: [
+                                    { icon: "󰅶", title: "Auto-Hide TopBar", desc: "Sembunyikan bar otomatis saat jendela maximized" },
+                                    { icon: "󰨡", title: "Bar Height & Spacing", desc: "Kustomisasi tinggi dan margin antar widget" },
+                                    { icon: "󰂚", title: "Notification Sounds", desc: "Efek suara saat popup dan notifikasi hadir" },
+                                    { icon: "󰍹", title: "Workspace Style", desc: "Tampilan nomor workspace (Angka / Titik / Ikon)" }
+                                ]
+                                delegate: Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: root.s(58)
+                                    radius: root.s(10)
+                                    color: Qt.alpha(root.surface0, 0.2)
+                                    border.color: Qt.alpha(root.surface1, 0.4)
+                                    border.width: 1
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.margins: root.s(12)
+                                        spacing: root.s(10)
+
+                                        Text { text: modelData.icon; font.family: "Iosevka Nerd Font"; font.pixelSize: root.s(18); color: root.subtext0 }
+
+                                        ColumnLayout {
+                                            spacing: root.s(2)
+                                            RowLayout {
+                                                spacing: root.s(6)
+                                                Text { text: modelData.title; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: root.s(12); color: root.subtext0 }
+                                                Rectangle {
+                                                    height: root.s(15)
+                                                    width: root.s(70)
+                                                    radius: root.s(4)
+                                                    color: Qt.alpha(root.peach, 0.15)
+                                                    Text { anchors.centerIn: parent; text: "Mendatang"; font.family: "JetBrains Mono"; font.pixelSize: root.s(9); color: root.peach }
+                                                }
+                                            }
+                                            Text { text: modelData.desc; font.family: "JetBrains Mono"; font.pixelSize: root.s(10); color: Qt.alpha(root.subtext0, 0.7); elide: Text.ElideRight; Layout.fillWidth: true }
+                                        }
+                                    }
                                 }
                             }
                         }

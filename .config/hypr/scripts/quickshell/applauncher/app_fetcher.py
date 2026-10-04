@@ -48,6 +48,8 @@ def fetch_apps():
                                 no_display = True
                                 
                     if app['name'] and app['exec'] and not no_display:
+                        if not app['icon']:
+                            app['icon'] = 'application-x-executable'
                         apps[app['name']] = app
             except Exception:
                 pass

@@ -3,6 +3,9 @@
   "openGuideAtStartup": false,
   "topbarHelpIcon": true,
   "workspaceCount": 8,
+  "topbarPosition": "top",
+  "wifiUiMode": "current",
+  "btUiMode": "current",
   "wallpaperDir": "/home/ndyar/Pictures/Wallpapers",
   "language": "us",
   "kbOptions": "grp:alt_shift_toggle",
@@ -92,32 +95,40 @@
       "type": "bind",
       "mods": "SUPER",
       "key": "left",
-      "dispatcher": "movefocus",
-      "command": "l",
+      "dispatcher": "exec",
+      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py left",
       "isEditing": false
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "right",
-      "dispatcher": "movefocus",
-      "command": "r",
+      "dispatcher": "exec",
+      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py right",
       "isEditing": false
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "up",
-      "dispatcher": "movefocus",
-      "command": "u",
+      "dispatcher": "exec",
+      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py up",
       "isEditing": false
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "down",
-      "dispatcher": "movefocus",
-      "command": "d",
+      "dispatcher": "exec",
+      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py down",
+      "isEditing": false
+    },
+    {
+      "type": "bind",
+      "mods": "SUPER",
+      "key": "T",
+      "dispatcher": "exec",
+      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/floating_tile_toggle.py",
       "isEditing": false
     },
     {
@@ -550,43 +561,46 @@
       "command": "hyprpolkitagent &"
     },
     {
-      "command": "awww-daemon"
+      "command": "awww-daemon &"
     },
     {
-      "command": "hypridle"
+      "command": "hypridle &"
     },
     {
-      "command": "quickshell -p ~/.config/hypr/scripts/quickshell/Shell.qml"
+      "command": "bash -c 'quickshell -p $HOME/.config/hypr/scripts/quickshell/Shell.qml' &"
     },
     {
-      "command": "~/.config/hypr/scripts/quickshell/focustime/launch_daemon.sh"
+      "command": "bash ~/.config/hypr/scripts/quickshell/focustime/launch_daemon.sh &"
     },
     {
-      "command": "~/.config/hypr/scripts/init.sh"
+      "command": "bash ~/.config/hypr/scripts/init.sh &"
     },
     {
-      "command": "~/.config/hypr/scripts/settings_watcher.sh &"
+      "command": "bash ~/.config/hypr/scripts/settings_watcher.sh &"
     },
     {
-      "command": "playerctld"
+      "command": "playerctld &"
     },
     {
-      "command": "swayosd-server --top-margin 0.9 --style \"$HOME/.config/swayosd/style.css\""
+      "command": "swayosd-server --top-margin 0.9 --style \"$HOME/.config/swayosd/style.css\" &"
     },
     {
-      "command": "wl-paste --type text --watch cliphist store"
+      "command": "wl-paste --type text --watch cliphist store &"
     },
     {
-      "command": "wl-paste --type image --watch cliphist store"
+      "command": "wl-paste --type image --watch cliphist store &"
     },
     {
-      "command": "~/.config/hypr/scripts/volume_listener.sh"
+      "command": "bash ~/.config/hypr/scripts/volume_listener.sh &"
     },
     {
-      "command": "~/.config/hypr/scripts/update_notifier.sh"
+      "command": "bash ~/.config/hypr/scripts/update_notifier.sh &"
     },
     {
-      "command": "bash ~/.config/hypr/scripts/brightness.sh restore"
+      "command": "bash ~/.config/hypr/scripts/brightness.sh restore &"
+    },
+    {
+      "command": "bash -c 'pkill -f infinite_desktop_core.py; python3 $HOME/.config/hypr/scripts/infinite_desktop/infinite_desktop_core.py 1.6' &"
     }
   ]
 }

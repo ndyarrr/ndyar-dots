@@ -497,24 +497,35 @@ Item {
                                 Behavior on color { ColorAnimation { duration: 300; easing.type: Easing.OutExpo } }
 
                                 Image {
+                                    id: iconImg
                                     anchors.centerIn: parent
                                     width: window.s(24)
                                     height: window.s(24)
-                                    source: model.icon.startsWith("/") ? "file://" + model.icon : "image://icon/" + model.icon
+                                    source: (model.icon && model.icon.startsWith("/")) ? "file://" + model.icon : (model.icon ? "image://icon/" + model.icon : "image://icon/application-x-executable")
                                     sourceSize: Qt.size(64, 64)
                                     fillMode: Image.PreserveAspectFit
                                     asynchronous: true
                                     smooth: true
                                     mipmap: true
+                                    visible: status === Image.Ready
                                 }
-                                
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: iconImg.status !== Image.Ready
+                                    text: ""
+                                    font.family: "Iosevka Nerd Font"
+                                    font.pixelSize: window.s(20)
+                                    color: index === appList.currentIndex ? window.mauve : window.text
+                                }
+
                                 // The Matugen Tint Overlay
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: window.s(12) 
                                     
                                     color: window.mauve
-                                    opacity: index === appList.currentIndex ? 0.25 : 0.08 
+                                    opacity: iconImg.status === Image.Ready ? (index === appList.currentIndex ? 0.25 : 0.08) : 0.04
                                     
                                     Behavior on opacity { 
                                         NumberAnimation { duration: 300; easing.type: Easing.OutExpo } 

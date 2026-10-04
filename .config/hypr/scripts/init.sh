@@ -6,6 +6,9 @@ qs_ensure_cache "wallpaper_picker"
 # Restore last backlight level early (amdgpu often boots at ~100%).
 bash "$(dirname "${BASH_SOURCE[0]}")/brightness.sh" restore &
 
+# Auto-start Infinite Desktop daemon if not already running
+pgrep -f infinite_desktop_core.py >/dev/null || nohup python3 "$HOME/.config/hypr/scripts/infinite_desktop/infinite_desktop_core.py" 1.6 >/dev/null 2>&1 &
+
 FLAG="$QS_STATE_WALLPAPER_PICKER/wallpaper_initialized"
 CACHE_IMG="$QS_CACHE_WALLPAPER_PICKER/current_wallpaper.png"
 

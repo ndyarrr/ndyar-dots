@@ -19,6 +19,7 @@ fi
 
 # Fetch the specific state of that device
 STATE=$(LC_ALL=C nmcli -t -f DEVICE,STATE d 2>/dev/null | awk -F: -v dev="$ETH_DEV" '$1==dev {print $2; exit}')
+MAC=$(cat /sys/class/net/"$ETH_DEV"/address 2>/dev/null)
 
 if [[ "$STATE" == "connected" || "$STATE" == "connecting" ]]; then
     POWER="on"
@@ -30,9 +31,6 @@ if [[ "$STATE" == "connected" || "$STATE" == "connecting" ]]; then
     SPEED=$(cat /sys/class/net/"$ETH_DEV"/speed 2>/dev/null)
     [ -n "$SPEED" ] && SPEED="${SPEED} Mbps" || SPEED="Unknown"
 
-    MAC=$(cat /sys/class/net/"$ETH_DEV"/address 2>/dev/null)
-
-    # Apply LC_ALL=C here as well to ensure consistent parsing
     PROFILE=$(LC_ALL=C nmcli -t -f NAME,DEVICE c show --active 2>/dev/null | grep ":$ETH_DEV$" | cut -d: -f1 | head -n1)
     [ -z "$PROFILE" ] && PROFILE="Wired Connection"
 
@@ -45,8 +43,15 @@ if [[ "$STATE" == "connected" || "$STATE" == "connecting" ]]; then
         --arg mac "$MAC" \
         '{id: $id, name: $name, icon: $icon, ip: $ip, speed: $speed, mac: $mac}')
 else
-    POWER="off"
-    CONNECTED_JSON="null"
+    POWER="on"
+    CONNECTED_JSON=$(jq -nc \
+        --arg id "$ETH_DEV" \
+        --arg name "Disconnected" \
+        --arg icon "󰈂" \
+        --arg ip "Cable Unplugged" \
+        --arg speed "Offline" \
+        --arg mac "$MAC" \
+        '{id: $id, name: $name, icon: $icon, ip: $ip, speed: $speed, mac: $mac}')
 fi
 
 # Output JSON cleanly, including the device name even if offline

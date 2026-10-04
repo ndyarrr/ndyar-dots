@@ -88,6 +88,12 @@ Variants {
                 id: mocha
             }
 
+            TrayContextMenu {
+                id: trayContextMenu
+                barWindow: barWindow
+                mocha: mocha
+            }
+
             property bool showHelpIcon: true
             property string distroIcon: ""
 
@@ -1464,7 +1470,7 @@ Variants {
                                     QsMenuAnchor {
                                         id: menuAnchorV
                                         anchor.window: barWindow
-                                        anchor.item: trayIconV
+                                        anchor.item: trayItemV
                                         menu: modelData.menu
                                     }
 
@@ -1476,7 +1482,11 @@ Variants {
                                         onClicked: mouse => {
                                             if (mouse.button === Qt.LeftButton) {
                                                 if (modelData.isMenuOnly || modelData.onlyMenu) {
-                                                    menuAnchorV.open();
+                                                    if (modelData.menu) {
+                                                        trayContextMenu.toggle(trayItemV, modelData.menu);
+                                                    } else {
+                                                        menuAnchorV.open();
+                                                    }
                                                 } else if (typeof modelData.activate === "function") {
                                                     modelData.activate();
                                                 }
@@ -1486,7 +1496,7 @@ Variants {
                                                 }
                                             } else if (mouse.button === Qt.RightButton) {
                                                 if (modelData.menu) {
-                                                    menuAnchorV.open();
+                                                    trayContextMenu.toggle(trayItemV, modelData.menu);
                                                 } else if (typeof modelData.contextMenu === "function") {
                                                     modelData.contextMenu(mouse.x, mouse.y);
                                                 } else {
@@ -1721,43 +1731,33 @@ Variants {
                             Repeater {
                                 id: trayRepeater
                                 model: SystemTray.items
-                                delegate: Image {
-                                    id: trayIcon
-                                    source: modelData.icon || ""
-                                    fillMode: Image.PreserveAspectFit
-                                    
-                                    sourceSize: Qt.size(barWindow.s(18), barWindow.s(18))
-                                    width: barWindow.s(18)
-                                    height: barWindow.s(18)
+                                delegate: Rectangle {
+                                    id: trayPill
+                                    width: barWindow.s(28)
+                                    height: barWindow.s(28)
+                                    radius: barWindow.s(8)
                                     anchors.verticalCenter: parent.verticalCenter
-                                    
-                                    property bool isHovered: trayMouse.containsMouse
-                                    property bool initAnimTrigger: false
-                                    opacity: initAnimTrigger ? (isHovered ? 1.0 : 0.8) : 0.0
-                                    scale: initAnimTrigger ? (isHovered ? 1.15 : 1.0) : 0.0
+                                    color: trayMouse.containsMouse ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 150 } }
 
-                                    Component.onCompleted: {
-                                        if (!barWindow.startupCascadeFinished) {
-                                            trayAnimTimer.interval = index * 50;
-                                            trayAnimTimer.start();
-                                        } else {
-                                            initAnimTrigger = true;
-                                        }
+                                    Image {
+                                        id: trayIcon
+                                        anchors.centerIn: parent
+                                        source: modelData.icon || ""
+                                        fillMode: Image.PreserveAspectFit
+                                        sourceSize: Qt.size(barWindow.s(18), barWindow.s(18))
+                                        width: barWindow.s(18)
+                                        height: barWindow.s(18)
+                                        opacity: trayMouse.containsMouse ? 1.0 : 0.85
+                                        scale: trayMouse.containsMouse ? 1.1 : 1.0
+                                        Behavior on opacity { NumberAnimation { duration: 200 } }
+                                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                                     }
-                                    Timer {
-                                        id: trayAnimTimer
-                                        running: false
-                                        repeat: false
-                                        onTriggered: trayIcon.initAnimTrigger = true
-                                    }
-
-                                    Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
 
                                     QsMenuAnchor {
                                         id: menuAnchor
                                         anchor.window: barWindow
-                                        anchor.item: trayIcon
+                                        anchor.item: trayPill
                                         menu: modelData.menu
                                     }
 
@@ -1769,7 +1769,11 @@ Variants {
                                         onClicked: mouse => {
                                             if (mouse.button === Qt.LeftButton) {
                                                 if (modelData.isMenuOnly || modelData.onlyMenu) {
-                                                    menuAnchor.open();
+                                                    if (modelData.menu) {
+                                                        trayContextMenu.toggle(trayPill, modelData.menu);
+                                                    } else {
+                                                        menuAnchor.open();
+                                                    }
                                                 } else if (typeof modelData.activate === "function") {
                                                     modelData.activate(); 
                                                 }
@@ -1779,7 +1783,7 @@ Variants {
                                                 }
                                             } else if (mouse.button === Qt.RightButton) {
                                                 if (modelData.menu) { 
-                                                    menuAnchor.open();
+                                                    trayContextMenu.toggle(trayPill, modelData.menu);
                                                 } else if (typeof modelData.contextMenu === "function") {
                                                     modelData.contextMenu(mouse.x, mouse.y);
                                                 } else {

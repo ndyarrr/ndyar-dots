@@ -4,4 +4,8 @@
 
 hl.on("hyprland.start", function()
     -- Propagate env (incl. DBUS) to the already-running user bus (portable: systemd + OpenRC/elogind)
-    hl.exec_cmd("~/.config/hypr/scripts/dbus_env.sh")
+    hl.exec_cmd("bash ~/.config/hypr/scripts/dbus_env.sh")
+    -- OpenRC User Audio Stack (PipeWire, WirePlumber, Pulse)
+    hl.exec_cmd([[bash -c 'pgrep -u "$UID" -x pipewire >/dev/null || pipewire' &]])
+    hl.exec_cmd([[bash -c 'sleep 0.2; pgrep -u "$UID" -x wireplumber >/dev/null || wireplumber' &]])
+    hl.exec_cmd([[bash -c 'sleep 0.3; pgrep -u "$UID" -x pipewire-pulse >/dev/null || pipewire-pulse' &]])

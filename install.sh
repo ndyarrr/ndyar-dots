@@ -257,8 +257,8 @@ ARCH_PKGS=(
     "cliphist" "jq" "socat" "inotify-tools" "pamixer" "brightnessctl" "acpi" "iw"
     "bluez" "bluez-utils" "libnotify" "networkmanager" "lm_sensors" "bc" 
     "pipewire" "wireplumber" "pipewire-pulse" "pipewire-alsa" "pipewire-jack" "libpulse" "python"
-    "imagemagick" "wget" "file" "git" "psmisc"
-    "matugen-bin" "ffmpeg" "fastfetch" "quickshell-git" "unzip" "python-websockets" "qt6-websockets"
+    "imagemagick" "wget" "file" "git" "psmisc" "python-evdev"
+    "matugen-bin" "ffmpeg" "fastfetch" "quickshell" "unzip" "python-websockets" "qt6-websockets"
     "grim" "playerctl" "satty" "yq" "xdg-desktop-portal-gtk" "slurp" "mpvpaper"
     "power-profiles-daemon" "easyeffects" "swayosd-git" "nautilus" "hyprpolkitagent"
     "qt6-wayland" "gpu-screen-recorder" "adw-gtk-theme"
@@ -1166,7 +1166,7 @@ done
 
 yes "Y" | $PKG_MANAGER pipewire-jack > /dev/null 2>&1 || true
 
-CONFLICTING_PKGS=("swayosd" "quickshell" "matugen" "go-yq")
+CONFLICTING_PKGS=("swayosd" "quickshell-git" "matugen" "go-yq")
 for cpkg in "${CONFLICTING_PKGS[@]}"; do
     if pacman -Qq | grep -qx "$cpkg"; then
         echo -e "  -> ${C_YELLOW}Removing conflicting package '$cpkg'...${RESET}"
