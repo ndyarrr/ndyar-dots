@@ -47,6 +47,19 @@ def get_active_workspace_id():
     return ws["id"] if ws else 1
 
 
+def get_workspace_windows(workspace_id):
+    clients = hyprctl_json(["clients"]) or []
+    return [
+        w for w in clients
+        if w.get("workspace", {}).get("id") == workspace_id
+    ]
+
+
+def set_float_lua(address, is_floating):
+    val_str = "true" if is_floating else "false"
+    return f'hl.dsp.window.float({{ action = "set", value = {val_str}, window = "address:{address}" }})'
+
+
 def get_floating_windows(workspace_id):
     clients = hyprctl_json(["clients"]) or []
     return [
@@ -92,6 +105,13 @@ def main():
     arg = sys.argv[1].lower()
     ws_id = get_active_workspace_id()
     windows = get_floating_windows(ws_id)
+    if not windows:
+        all_ws = get_workspace_windows(ws_id)
+        if all_ws:
+            float_exprs = [set_float_lua(w["address"], True) for w in all_ws]
+            from hypr_ipc import batch
+            batch(float_exprs, timeout=2)
+            windows = get_floating_windows(ws_id)
     if not windows:
         sys.exit(0)
 

@@ -172,9 +172,9 @@ def classify_device(path):
     except Exception:
         return None
 
-    keys = set(caps.get(ecodes.EV_KEY, []))
-    rels = set(caps.get(ecodes.EV_REL, []))
-    abss = set(caps.get(ecodes.EV_ABS, []))
+    keys = {k if isinstance(k, int) else k[0] for k in caps.get(ecodes.EV_KEY, [])}
+    rels = {r if isinstance(r, int) else r[0] for r in caps.get(ecodes.EV_REL, [])}
+    abss = {a[0] if isinstance(a, tuple) else a for a in caps.get(ecodes.EV_ABS, [])}
 
     # Touchpad / Touchscreen device
     is_touchpad = (
@@ -298,6 +298,22 @@ def mouse_reader_device(path):
         pass
 
 
+def get_workspace_windows(workspace_id):
+    try:
+        clients = hyprctl_json(["clients"]) or []
+        return [
+            w for w in clients
+            if w.get("workspace", {}).get("id") == workspace_id
+        ]
+    except Exception:
+        return []
+
+
+def set_float_lua(address, is_floating):
+    val_str = "true" if is_floating else "false"
+    return f'hl.dsp.window.float({{ action = "set", value = {val_str}, window = "address:{address}" }})'
+
+
 def touchpad_reader_device(path):
     global acc_zoom
     try:
@@ -324,11 +340,10 @@ def touchpad_reader_device(path):
             elif code == ABS_MT_TRACKING_ID:
                 if value == -1:
                     slots.pop(current_slot, None)
-                    if len(slots) < 2:
-                        prev_distance = None
+                    prev_distance = None
                 else:
                     if current_slot not in slots:
-                        slots[current_slot] = {"x": 0, "y": 0}
+                        slots[current_slot] = {"x": None, "y": None}
             elif code == ABS_MT_POSITION_X:
                 if current_slot in slots:
                     slots[current_slot]["x"] = value
@@ -337,21 +352,24 @@ def touchpad_reader_device(path):
                     slots[current_slot]["y"] = value
 
         elif etype == EV_SYN:
-            active_slots = list(slots.values())
-            if len(active_slots) >= 2:
-                p0 = active_slots[0]
-                p1 = active_slots[1]
+            valid_slots = [
+                s for s in slots.values()
+                if s.get("x") is not None and s.get("y") is not None
+            ]
+            if len(valid_slots) >= 2:
+                p0 = valid_slots[0]
+                p1 = valid_slots[1]
                 dx = float(p1["x"] - p0["x"])
                 dy = float(p1["y"] - p0["y"])
                 dist = math.hypot(dx, dy)
 
-                if prev_distance is not None and prev_distance > 10.0:
+                if prev_distance is not None and prev_distance > 30.0:
                     delta_d = dist - prev_distance
-                    if abs(delta_d) > 1.0:
+                    if abs(delta_d) > 1.5 and abs(delta_d) < 300.0:
                         with lock:
                             # Pinch out (dist increases) -> Zoom In (> 0)
                             # Pinch in (dist decreases)  -> Zoom Out (< 0)
-                            acc_zoom += delta_d * 0.003
+                            acc_zoom += delta_d * 0.0025
                 prev_distance = dist
             else:
                 prev_distance = None
@@ -407,6 +425,13 @@ def device_manager():
 def apply_zoom_delta(zoom_delta):
     ws_id = get_active_workspace_id()
     windows = get_floating_windows(ws_id)
+    if not windows:
+        all_ws = get_workspace_windows(ws_id)
+        if all_ws:
+            float_exprs = [set_float_lua(w["address"], True) for w in all_ws]
+            from hypr_ipc import batch
+            batch(float_exprs, timeout=2)
+            windows = get_floating_windows(ws_id)
     if not windows:
         return
 
