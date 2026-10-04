@@ -555,14 +555,6 @@
       "dispatcher": "exec",
       "command": "~/.config/hypr/scripts/focus_next_monitor.sh",
       "isEditing": false
-    },
-    {
-      "type": "bind",
-      "mods": "SUPER",
-      "key": "grave",
-      "dispatcher": "exec",
-      "command": "hyprctl dispatch hyprexpo:expo toggle",
-      "isEditing": false
     }
   ],
   "startup": [

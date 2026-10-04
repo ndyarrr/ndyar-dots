@@ -75,4 +75,3 @@ hl.bind([[SHIFT + SUPER + 8]], hl.dsp.exec_cmd([[~/.config/hypr/scripts/qs_manag
 hl.bind([[SHIFT + SUPER + 9]], hl.dsp.exec_cmd([[~/.config/hypr/scripts/qs_manager.sh 9 move]]))
 hl.bind([[SHIFT + SUPER + 0]], hl.dsp.exec_cmd([[~/.config/hypr/scripts/qs_manager.sh 10 move]]))
 hl.bind([[SUPER + TAB]], hl.dsp.exec_cmd([[~/.config/hypr/scripts/focus_next_monitor.sh]]))
-hl.bind([[SUPER + grave]], hl.dsp.exec_cmd([[hyprctl dispatch hyprexpo:expo toggle]]))
