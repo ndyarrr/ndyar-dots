@@ -2567,7 +2567,7 @@ Item {
     }
 
     // =========================================================================
-    // FORMAL VIEW CONTAINER (Clean, compact, dedicated panel for Eth/WiFi/BT)
+    // FORMAL VIEW CONTAINER (KDE Plasma Style - Clean & Modern)
     // =========================================================================
     Item {
         id: formalViewContainer
@@ -2576,41 +2576,47 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: window.s(16)
+            radius: window.s(14)
             color: window.base
-            border.color: window.surface1
+            border.color: Qt.alpha(window.surface1, 0.7)
             border.width: 1
             clip: true
 
-            // Top subtle accent line
+            // Top accent indicator line
             Rectangle {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: window.s(3)
                 color: window.activeColor
+                radius: window.s(2)
             }
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: window.s(18)
-                spacing: window.s(12)
+                anchors.topMargin: window.s(12)
+                anchors.leftMargin: window.s(16)
+                anchors.rightMargin: window.s(16)
+                anchors.bottomMargin: window.s(14)
+                spacing: window.s(10)
 
-                // 1. Header Row
+                // ── 1. Header Row (KDE Plasma Style) ─────────────────────────
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: window.s(12)
 
+                    // Icon badge
                     Rectangle {
                         width: window.s(40)
                         height: window.s(40)
                         radius: window.s(10)
-                        color: Qt.alpha(window.activeColor, 0.18)
-                        border.color: Qt.alpha(window.activeColor, 0.4)
+                        color: Qt.alpha(window.activeColor, 0.16)
+                        border.color: Qt.alpha(window.activeColor, 0.35)
                         border.width: 1
+
                         Text {
                             anchors.centerIn: parent
-                            text: window.activeMode === "eth" ? "󰈀" : (window.activeMode === "wifi" ? "󰤨" : "󰂯")
+                            text: window.activeMode === eth ? "󰈀" : (window.activeMode === "wifi" ? "󰤨" : "󰂯")
                             font.family: "Iosevka Nerd Font"
                             font.pixelSize: window.s(22)
                             color: window.activeColor
@@ -2618,63 +2624,55 @@ Item {
                     }
 
                     ColumnLayout {
-                        spacing: 2
+                        spacing: window.s(2)
                         Text {
-                            text: window.activeMode === "eth" ? "Ethernet" : (window.activeMode === "wifi" ? "Wi-Fi Networks" : "Bluetooth Devices")
+                            text: window.activeMode === "eth" ? "Ethernet" : (window.activeMode === "wifi" ? "Jaringan Wi-Fi" : "Perangkat Bluetooth")
                             font.family: "JetBrains Mono"
                             font.weight: Font.Bold
-                            font.pixelSize: window.s(15)
+                            font.pixelSize: window.s(14)
                             color: window.text
                         }
                         Text {
                             text: {
                                 if (window.activeMode === "eth") {
-                                    return window.ethConnected ? (window.ethConnected.name + " • " + window.ethConnected.speed) : "Disconnected";
+                                    return window.ethConnected ? (window.ethConnected.name + " • " + window.ethConnected.speed) : "Kabel Tidak Terhubung";
                                 } else if (window.activeMode === "wifi") {
-                                    return window.wifiPower === "off" ? "Wi-Fi Disnonaktifkan" : (window.wifiConnected ? ("Connected: " + window.wifiConnected.ssid) : "Tidak Terhubung");
+                                    return window.wifiPower === "off" ? "Wi-Fi Dinonaktifkan" : (window.wifiConnected ? ("Terhubung: " + window.wifiConnected.ssid) : "Tidak Terhubung");
                                 } else {
-                                    return window.btPower === "off" ? "Bluetooth Disnonaktifkan" : ((window.btConnected && window.btConnected.length > 0) ? (window.btConnected.length + " Terhubung") : "Siap Terhubung");
+                                    return window.btPower === "off" ? "Bluetooth Dinonaktifkan" : ((window.btConnected && window.btConnected.length > 0) ? (window.btConnected.length + " Perangkat Terhubung") : "Siap Terhubung");
                                 }
                             }
                             font.family: "JetBrains Mono"
-                            font.pixelSize: window.s(11)
+                            font.pixelSize: window.s(10)
                             color: window.subtext0
                         }
                     }
 
                     Item { Layout.fillWidth: true }
 
-                    // Power Toggle Switch (Formal View)
+                    // Power Toggle Pill Switch (Wi-Fi / BT only)
                     Rectangle {
-                        width: window.s(64)
-                        height: window.s(28)
-                        radius: window.s(14)
+                        id: fPowerToggle
+                        width: window.s(52)
+                        height: window.s(26)
+                        radius: window.s(13)
                         visible: window.activeMode !== "eth"
-                        color: window.currentPower ? Qt.alpha(window.activeColor, 0.25) : window.surface0
-                        border.color: window.currentPower ? window.activeColor : window.surface1
+                        color: window.currentPower ? Qt.alpha(window.activeColor, 0.22) : window.surface0
+                        border.color: window.currentPower ? window.activeColor : window.surface2
                         border.width: 1
 
-                        Text {
-                            text: window.currentPower ? "ON" : "OFF"
-                            font.family: "JetBrains Mono"
-                            font.weight: Font.Bold
-                            font.pixelSize: window.s(9)
-                            color: window.currentPower ? window.activeColor : window.subtext0
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: window.currentPower ? undefined : parent.left
-                            anchors.right: window.currentPower ? parent.right : undefined
-                            anchors.leftMargin: window.s(8)
-                            anchors.rightMargin: window.s(8)
-                        }
+                        Behavior on color { ColorAnimation { duration: 150 } }
 
                         Rectangle {
-                            width: window.s(20)
-                            height: window.s(20)
-                            radius: window.s(10)
+                            id: fPowerKnob
+                            width: window.s(18)
+                            height: window.s(18)
+                            radius: window.s(9)
                             anchors.verticalCenter: parent.verticalCenter
                             x: window.currentPower ? parent.width - width - window.s(4) : window.s(4)
-                            color: window.currentPower ? window.activeColor : window.subtext0
+                            color: window.currentPower ? window.activeColor : window.overlay0
                             Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                            Behavior on color { ColorAnimation { duration: 150 } }
                         }
 
                         MouseArea {
@@ -2693,15 +2691,16 @@ Item {
                         }
                     }
 
-                    // Refresh Button for Ethernet
+                    // Refresh button for Ethernet
                     Rectangle {
-                        width: window.s(32)
-                        height: window.s(32)
+                        width: window.s(30)
+                        height: window.s(30)
                         radius: window.s(8)
                         visible: window.activeMode === "eth"
-                        color: ethRefMa.containsMouse ? window.surface1 : window.surface0
-                        border.color: window.surface1
+                        color: fEthRefHov.containsMouse ? window.surface1 : window.surface0
+                        border.color: window.surface2
                         border.width: 1
+                        Behavior on color { ColorAnimation { duration: 100 } }
 
                         Text {
                             anchors.centerIn: parent
@@ -2710,9 +2709,8 @@ Item {
                             font.pixelSize: window.s(14)
                             color: window.text
                         }
-
                         MouseArea {
-                            id: ethRefMa
+                            id: fEthRefHov
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -2721,35 +2719,37 @@ Item {
                     }
                 }
 
-                // 2. Mode Switcher Tabs
+                // ── 2. Segmented Mode Switcher Tabs ──────────────────────────
                 Rectangle {
                     Layout.fillWidth: true
-                    height: window.s(36)
-                    radius: window.s(10)
+                    height: window.s(34)
+                    radius: window.s(8)
                     color: window.mantle
-                    border.color: Qt.alpha(window.surface1, 0.6)
+                    border.color: Qt.alpha(window.surface1, 0.5)
                     border.width: 1
 
                     RowLayout {
                         anchors.fill: parent
                         anchors.margins: window.s(3)
-                        spacing: window.s(4)
+                        spacing: window.s(3)
 
                         // Ethernet Tab
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            radius: window.s(8)
+                            radius: window.s(6)
                             visible: window.ethPresent
-                            color: window.activeMode === "eth" ? window.activeColor : (fEthMa.containsMouse ? window.surface0 : "transparent")
+                            color: window.activeMode === "eth" ? window.activeColor : (fEthTabHov.containsMouse ? Qt.alpha(window.surface1, 0.8) : "transparent")
+                            Behavior on color { ColorAnimation { duration: 120 } }
+
                             RowLayout {
                                 anchors.centerIn: parent
-                                spacing: window.s(6)
-                                Text { text: "󰈀"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14); color: window.activeMode === "eth" ? window.crust : window.text }
-                                Text { text: "Ethernet"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.activeMode === "eth" ? window.crust : window.text }
+                                spacing: window.s(5)
+                                Text { text: "󰈀"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(13); color: window.activeMode === "eth" ? window.crust : window.text }
+                                Text { text: "Ethernet"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(10); color: window.activeMode === "eth" ? window.crust : window.text }
                             }
                             MouseArea {
-                                id: fEthMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                id: fEthTabHov; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                 onClicked: { window.pendingWifiId = ""; window.playSfx("switch.wav"); window.activeMode = "eth"; }
                             }
                         }
@@ -2758,17 +2758,19 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            radius: window.s(8)
+                            radius: window.s(6)
                             visible: window.wifiPresent
-                            color: window.activeMode === "wifi" ? window.activeColor : (fWifiMa.containsMouse ? window.surface0 : "transparent")
+                            color: window.activeMode === "wifi" ? window.activeColor : (fWifiTabHov.containsMouse ? Qt.alpha(window.surface1, 0.8) : "transparent")
+                            Behavior on color { ColorAnimation { duration: 120 } }
+
                             RowLayout {
                                 anchors.centerIn: parent
-                                spacing: window.s(6)
-                                Text { text: "󰤨"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14); color: window.activeMode === "wifi" ? window.crust : window.text }
-                                Text { text: "Wi-Fi"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.activeMode === "wifi" ? window.crust : window.text }
+                                spacing: window.s(5)
+                                Text { text: "󰤨"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(13); color: window.activeMode === "wifi" ? window.crust : window.text }
+                                Text { text: "Wi-Fi"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(10); color: window.activeMode === "wifi" ? window.crust : window.text }
                             }
                             MouseArea {
-                                id: fWifiMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                id: fWifiTabHov; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                 onClicked: { window.pendingWifiId = ""; window.playSfx("switch.wav"); window.activeMode = "wifi"; }
                             }
                         }
@@ -2777,29 +2779,31 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            radius: window.s(8)
+                            radius: window.s(6)
                             visible: window.btPresent
-                            color: window.activeMode === "bt" ? window.activeColor : (fBtMa.containsMouse ? window.surface0 : "transparent")
+                            color: window.activeMode === "bt" ? window.activeColor : (fBtTabHov.containsMouse ? Qt.alpha(window.surface1, 0.8) : "transparent")
+                            Behavior on color { ColorAnimation { duration: 120 } }
+
                             RowLayout {
                                 anchors.centerIn: parent
-                                spacing: window.s(6)
-                                Text { text: "󰂯"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14); color: window.activeMode === "bt" ? window.crust : window.text }
-                                Text { text: "Bluetooth"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.activeMode === "bt" ? window.crust : window.text }
+                                spacing: window.s(5)
+                                Text { text: "󰂯"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(13); color: window.activeMode === "bt" ? window.crust : window.text }
+                                Text { text: "Bluetooth"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(10); color: window.activeMode === "bt" ? window.crust : window.text }
                             }
                             MouseArea {
-                                id: fBtMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                id: fBtTabHov; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                 onClicked: { window.pendingWifiId = ""; window.playSfx("switch.wav"); window.activeMode = "bt"; }
                             }
                         }
                     }
                 }
 
-                // 3. Main Content Area
+                // ── 3. Content Area ──────────────────────────────────────────
                 Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
-                    // --- A. Ethernet Content ---
+                    // ── A. Ethernet ──────────────────────────────────────────
                     ColumnLayout {
                         anchors.fill: parent
                         visible: window.activeMode === "eth"
@@ -2808,76 +2812,80 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            radius: window.s(12)
+                            radius: window.s(10)
                             color: window.mantle
-                            border.color: window.surface0
+                            border.color: Qt.alpha(window.surface1, 0.5)
                             border.width: 1
 
                             ColumnLayout {
                                 anchors.fill: parent
                                 anchors.margins: window.s(16)
-                                spacing: window.s(12)
+                                spacing: window.s(10)
 
-                                RowLayout {
-                                    spacing: window.s(12)
-                                    Rectangle {
-                                        width: window.s(48)
-                                        height: window.s(48)
-                                        radius: window.s(12)
-                                        color: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? Qt.alpha(window.activeColor, 0.15) : Qt.alpha(window.surface1, 0.3)
+                                // ETH status card
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: window.s(60)
+                                    radius: window.s(8)
+                                    color: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged")
+                                        ? Qt.alpha(window.activeColor, 0.12) : Qt.alpha(window.red, 0.08)
+                                    border.color: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged")
+                                        ? Qt.alpha(window.activeColor, 0.4) : Qt.alpha(window.red, 0.3)
+                                    border.width: 1
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: window.s(14)
+                                        anchors.rightMargin: window.s(14)
+                                        spacing: window.s(12)
+
                                         Text {
-                                            anchors.centerIn: parent
-                                            text: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? "󰈀" : "󰈂"
                                             font.family: "Iosevka Nerd Font"
-                                            font.pixelSize: window.s(26)
-                                            color: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? window.activeColor : window.subtext0
+                                            font.pixelSize: window.s(28)
+                                            color: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? window.activeColor : window.red
+                                            text: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? "󰈀" : "󰈂"
                                         }
-                                    }
-                                    ColumnLayout {
-                                        spacing: 2
-                                        Text {
-                                            text: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? "Koneksi Kabel Aktif" : "Kabel Tidak Terhubung"
-                                            font.family: "JetBrains Mono"
-                                            font.weight: Font.Bold
-                                            font.pixelSize: window.s(14)
-                                            color: window.text
-                                        }
-                                        Text {
-                                            text: (window.ethConnected && window.ethConnected.id) ? ("Interface: " + window.ethConnected.id) : "No Ethernet Interface"
-                                            font.family: "JetBrains Mono"
-                                            font.pixelSize: window.s(11)
-                                            color: window.subtext0
+                                        ColumnLayout {
+                                            spacing: window.s(2)
+                                            Text {
+                                                text: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? "Koneksi Kabel Aktif" : "Kabel Tidak Terhubung"
+                                                font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(13)
+                                                color: window.text
+                                            }
+                                            Text {
+                                                text: (window.ethConnected && window.ethConnected.id) ? ("Interface: " + window.ethConnected.id) : "Tidak ada interface ethernet"
+                                                font.family: "JetBrains Mono"; font.pixelSize: window.s(10); color: window.subtext0
+                                            }
                                         }
                                     }
                                 }
 
+                                // Separator
                                 Rectangle { Layout.fillWidth: true; height: 1; color: Qt.alpha(window.surface1, 0.4) }
 
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: window.s(8)
+                                // Info rows
+                                Repeater {
+                                    model: [
+                                        { label: "IP Address", icon: "󰩟", val: (window.ethConnected && window.ethConnected.ip) ? window.ethConnected.ip : "—" },
+                                        { label: "Kecepatan", icon: "󰓅", val: (window.ethConnected && window.ethConnected.speed) ? window.ethConnected.speed : "—" },
+                                        { label: "MAC Address", icon: "󰞽", val: (window.ethConnected && window.ethConnected.mac) ? window.ethConnected.mac : "—" },
+                                        { label: "Status", icon: "󰤁", val: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? "Online / Terhubung" : "Offline" }
+                                    ]
+                                    delegate: Rectangle {
+                                        Layout.fillWidth: true
+                                        height: window.s(34)
+                                        radius: window.s(6)
+                                        color: window.surface0
 
-                                    Repeater {
-                                        model: [
-                                            { label: "IP Address", val: (window.ethConnected && window.ethConnected.ip) ? window.ethConnected.ip : "-" },
-                                            { label: "Kecepatan (Speed)", val: (window.ethConnected && window.ethConnected.speed) ? window.ethConnected.speed : "-" },
-                                            { label: "MAC Address", val: (window.ethConnected && window.ethConnected.mac) ? window.ethConnected.mac : "-" },
-                                            { label: "Status Perangkat", val: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? "Online / Connected" : "Offline" }
-                                        ]
-                                        delegate: Rectangle {
-                                            Layout.fillWidth: true
-                                            height: window.s(36)
-                                            radius: window.s(8)
-                                            color: window.surface0
-
-                                            RowLayout {
-                                                anchors.fill: parent
-                                                anchors.leftMargin: window.s(12)
-                                                anchors.rightMargin: window.s(12)
-                                                Text { text: modelData.label; font.family: "JetBrains Mono"; font.pixelSize: window.s(11); color: window.subtext0 }
-                                                Item { Layout.fillWidth: true }
-                                                Text { text: modelData.val; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.text }
-                                            }
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.leftMargin: window.s(10)
+                                            anchors.rightMargin: window.s(10)
+                                            spacing: window.s(8)
+                                            Text { text: modelData.icon; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(13); color: window.subtext0 }
+                                            Text { text: modelData.label; font.family: "JetBrains Mono"; font.pixelSize: window.s(10); color: window.subtext0 }
+                                            Item { Layout.fillWidth: true }
+                                            Text { text: modelData.val; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(10); color: window.text }
                                         }
                                     }
                                 }
@@ -2887,13 +2895,13 @@ Item {
                         }
                     }
 
-                    // --- B. Wi-Fi Content ---
+                    // ── B. Wi-Fi ─────────────────────────────────────────────
                     ColumnLayout {
                         anchors.fill: parent
                         visible: window.activeMode === "wifi"
-                        spacing: window.s(10)
+                        spacing: window.s(8)
 
-                        // If Wi-Fi is OFF
+                        // Wi-Fi OFF state
                         Item {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -2901,64 +2909,97 @@ Item {
 
                             ColumnLayout {
                                 anchors.centerIn: parent
-                                spacing: window.s(12)
+                                spacing: window.s(10)
 
-                                Text { Layout.alignment: Qt.AlignHCenter; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(44); color: window.subtext0; text: "󰤮" }
-                                Text { Layout.alignment: Qt.AlignHCenter; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(14); color: window.text; text: "Wi-Fi Disnonaktifkan" }
-                                Text { Layout.alignment: Qt.AlignHCenter; font.family: "JetBrains Mono"; font.pixelSize: window.s(11); color: window.subtext0; text: "Aktifkan Wi-Fi untuk memindai jaringan" }
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "󰤮"
+                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(48)
+                                    color: Qt.alpha(window.subtext0, 0.5)
+                                }
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "Wi-Fi Dinonaktifkan"
+                                    font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(14)
+                                    color: window.text
+                                }
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "Aktifkan Wi-Fi untuk memindai jaringan"
+                                    font.family: "JetBrains Mono"; font.pixelSize: window.s(10)
+                                    color: window.subtext0
+                                }
                                 Rectangle {
                                     Layout.alignment: Qt.AlignHCenter
-                                    Layout.topMargin: window.s(6)
-                                    width: window.s(140); height: window.s(34); radius: window.s(8); color: window.activeColor
+                                    Layout.topMargin: window.s(8)
+                                    width: window.s(150); height: window.s(36); radius: window.s(8)
+                                    color: fWifiOnBtnHov.containsMouse ? Qt.lighter(window.activeColor, 1.1) : window.activeColor
+                                    Behavior on color { ColorAnimation { duration: 100 } }
                                     RowLayout {
                                         anchors.centerIn: parent; spacing: window.s(6)
                                         Text { text: ""; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14); color: window.base }
                                         Text { text: "Nyalakan Wi-Fi"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.base }
                                     }
                                     MouseArea {
-                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        id: fWifiOnBtnHov
+                                        anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                         onClicked: { Quickshell.execDetached(["nmcli", "radio", "wifi", "on"]); wifiPoller.running = true; }
                                     }
                                 }
                             }
                         }
 
-                        // If Wi-Fi is ON
+                        // Wi-Fi ON state
                         ColumnLayout {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             visible: window.wifiPower === "on"
-                            spacing: window.s(10)
+                            spacing: window.s(8)
 
-                            // Connected network card (if connected)
+                            // Connected network card (KDE Plasma Style)
                             Rectangle {
                                 Layout.fillWidth: true
-                                height: window.s(64)
-                                radius: window.s(10)
-                                color: Qt.alpha(window.activeColor, 0.12)
-                                border.color: window.activeColor
+                                height: window.s(58)
+                                radius: window.s(8)
+                                color: Qt.alpha(window.activeColor, 0.10)
+                                border.color: Qt.alpha(window.activeColor, 0.5)
                                 border.width: 1
                                 visible: window.wifiConnected && window.wifiConnected.ssid !== undefined
 
                                 RowLayout {
                                     anchors.fill: parent
-                                    anchors.leftMargin: window.s(14)
-                                    anchors.rightMargin: window.s(14)
-                                    spacing: window.s(12)
+                                    anchors.leftMargin: window.s(12)
+                                    anchors.rightMargin: window.s(10)
+                                    spacing: window.s(10)
 
-                                    Text { font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(24); color: window.activeColor; text: "󰤨" }
+                                    Rectangle {
+                                        width: window.s(34); height: window.s(34); radius: window.s(8)
+                                        color: Qt.alpha(window.activeColor, 0.18)
+                                        Text { anchors.centerIn: parent; text: "󰤨"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(18); color: window.activeColor }
+                                    }
                                     ColumnLayout {
-                                        Layout.fillWidth: true; spacing: 2
-                                        Text { text: window.wifiConnected ? window.wifiConnected.ssid : ""; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(13); color: window.text; elide: Text.ElideRight }
-                                        Text { text: "Terhubung • Signal: " + (window.wifiConnected ? (window.wifiConnected.signal || 100) : 100) + "%"; font.family: "JetBrains Mono"; font.pixelSize: window.s(10); color: window.subtext0 }
+                                        Layout.fillWidth: true; spacing: window.s(2)
+                                        Text {
+                                            text: window.wifiConnected ? window.wifiConnected.ssid : ""
+                                            font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(12); color: window.text; elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                        }
+                                        Text {
+                                            text: "Terhubung • Sinyal: " + (window.wifiConnected ? (window.wifiConnected.signal || 100) : 100) + "%"
+                                            font.family: "JetBrains Mono"; font.pixelSize: window.s(10); color: window.subtext0
+                                        }
                                     }
                                     Rectangle {
-                                        width: window.s(90); height: window.s(28); radius: window.s(6); color: Qt.alpha(window.red, 0.15); border.color: window.red; border.width: 1
+                                        width: window.s(78); height: window.s(28); radius: window.s(6)
+                                        color: fWifiDiscHov.containsMouse ? Qt.alpha(window.red, 0.25) : Qt.alpha(window.red, 0.12)
+                                        border.color: Qt.alpha(window.red, 0.6); border.width: 1
+                                        Behavior on color { ColorAnimation { duration: 100 } }
                                         Text { anchors.centerIn: parent; text: "Putuskan"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(10); color: window.red }
                                         MouseArea {
-                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            id: fWifiDiscHov
+                                            anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                             onClicked: {
-                                                let cmd = "nmcli device disconnect $(nmcli -t -f DEVICE,TYPE d | grep wifi | cut -d: -f1 | head -n1)";
+                                                let cmd = "nmcli device disconnect wlan0";
                                                 Quickshell.execDetached(["sh", "-c", cmd]);
                                                 wifiPoller.running = true;
                                             }
@@ -2967,26 +3008,34 @@ Item {
                                 }
                             }
 
-                            // Available Networks Header
+                            // Networks header + scan button
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: "Daftar Jaringan Wi-Fi"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(12); color: window.subtext0 }
+                                RowLayout {
+                                    spacing: window.s(5)
+                                    Text { text: "󰤨"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(12); color: window.subtext0 }
+                                    Text { text: "Daftar Jaringan"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.subtext0 }
+                                }
                                 Item { Layout.fillWidth: true }
                                 Rectangle {
-                                    width: window.s(76); height: window.s(24); radius: window.s(6); color: window.surface0; border.color: window.surface1; border.width: 1
+                                    width: window.s(74); height: window.s(24); radius: window.s(6)
+                                    color: fWifiScanHov.containsMouse ? window.surface1 : window.surface0
+                                    border.color: window.surface2; border.width: 1
+                                    Behavior on color { ColorAnimation { duration: 100 } }
                                     RowLayout {
                                         anchors.centerIn: parent; spacing: window.s(4)
                                         Text { text: "󰑐"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(11); color: window.text }
                                         Text { text: "Pindai"; font.family: "JetBrains Mono"; font.pixelSize: window.s(10); color: window.text }
                                     }
                                     MouseArea {
-                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        id: fWifiScanHov
+                                        anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                         onClicked: { Quickshell.execDetached(["nmcli", "device", "wifi", "rescan"]); wifiPoller.running = true; }
                                     }
                                 }
                             }
 
-                            // Scrollable list of networks
+                            // Network list (KDE Plasma Style)
                             ScrollView {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
@@ -2994,20 +3043,23 @@ Item {
 
                                 ListView {
                                     anchors.fill: parent
-                                    spacing: window.s(5)
+                                    spacing: window.s(4)
                                     model: wifiListModel
 
                                     delegate: Rectangle {
                                         width: ListView.view.width
-                                        height: window.s(44)
+                                        height: window.s(46)
                                         radius: window.s(8)
 
                                         property bool isConn: window.wifiConnected && (window.wifiConnected.ssid === model.ssid || window.wifiConnected.ssid === model.id)
                                         property bool isBusy: window.busyTasks[model.id] === true || window.connectingId === model.id
 
-                                        color: isConn ? Qt.alpha(window.activeColor, 0.15) : (fWifiItemMa.containsMouse ? window.surface1 : window.surface0)
-                                        border.color: isConn ? window.activeColor : (fWifiItemMa.containsMouse ? window.surface2 : "transparent")
+                                        color: isConn ? Qt.alpha(window.activeColor, 0.12)
+                                             : (fWifiRowHov.containsMouse ? window.surface1 : window.surface0)
+                                        border.color: isConn ? Qt.alpha(window.activeColor, 0.5)
+                                             : (fWifiRowHov.containsMouse ? Qt.alpha(window.surface2, 0.7) : "transparent")
                                         border.width: 1
+                                        Behavior on color { ColorAnimation { duration: 100 } }
 
                                         RowLayout {
                                             anchors.fill: parent
@@ -3015,31 +3067,61 @@ Item {
                                             anchors.rightMargin: window.s(10)
                                             spacing: window.s(10)
 
-                                            Text { font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(16); color: isConn ? window.activeColor : window.text; text: model.icon || "󰤨" }
-                                            ColumnLayout {
-                                                Layout.fillWidth: true; spacing: 1
-                                                Text { text: model.ssid || model.id; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: isConn ? window.activeColor : window.text; elide: Text.ElideRight }
-                                                Text { text: isConn ? "Terhubung" : ("Sinyal: " + (model.signal || 0) + "% • " + (model.security || "Open")); font.family: "JetBrains Mono"; font.pixelSize: window.s(9); color: isConn ? window.activeColor : window.subtext0 }
+                                            // Signal icon badge
+                                            Rectangle {
+                                                width: window.s(30); height: window.s(30); radius: window.s(6)
+                                                color: isConn ? Qt.alpha(window.activeColor, 0.18) : Qt.alpha(window.surface2, 0.5)
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: model.icon || "󰤨"
+                                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(15)
+                                                    color: isConn ? window.activeColor : window.subtext0
+                                                }
                                             }
 
+                                            ColumnLayout {
+                                                Layout.fillWidth: true; spacing: window.s(1)
+                                                Text {
+                                                    text: model.ssid || model.id
+                                                    font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11)
+                                                    color: isConn ? window.activeColor : window.text
+                                                    elide: Text.ElideRight; Layout.fillWidth: true
+                                                }
+                                                Text {
+                                                    text: isConn ? "✓ Terhubung" : ("Sinyal: " + (model.signal || 0) + "% • " + (model.security || "Open"))
+                                                    font.family: "JetBrains Mono"; font.pixelSize: window.s(9)
+                                                    color: isConn ? window.activeColor : window.subtext0
+                                                }
+                                            }
+
+                                            // Action button
                                             Rectangle {
-                                                width: window.s(76); height: window.s(26); radius: window.s(5)
-                                                color: isConn ? Qt.alpha(window.red, 0.15) : Qt.alpha(window.activeColor, 0.2)
-                                                border.color: isConn ? window.red : window.activeColor
+                                                width: window.s(74)
+                                                height: window.s(28)
+                                                radius: window.s(6)
+                                                color: {
+                                                    if (isBusy) return Qt.alpha(window.subtext0, 0.12);
+                                                    if (isConn) return Qt.alpha(window.red, 0.15);
+                                                    return fWifiBtnHov.containsMouse ? Qt.alpha(window.activeColor, 0.3) : Qt.alpha(window.activeColor, 0.16);
+                                                }
+                                                border.color: isBusy ? Qt.alpha(window.subtext0, 0.3) : (isConn ? window.red : window.activeColor)
                                                 border.width: 1
+                                                Behavior on color { ColorAnimation { duration: 100 } }
 
                                                 Text {
                                                     anchors.centerIn: parent
                                                     text: isBusy ? "..." : (isConn ? "Putus" : "Sambung")
                                                     font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(10)
-                                                    color: isConn ? window.red : window.activeColor
+                                                    color: isBusy ? window.subtext0 : (isConn ? window.red : window.activeColor)
                                                 }
 
                                                 MouseArea {
-                                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                                    id: fWifiBtnHov
+                                                    anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                                    enabled: !isBusy
                                                     onClicked: {
                                                         if (isConn) {
-                                                            let cmd = "nmcli device disconnect $(nmcli -t -f DEVICE,TYPE d | grep wifi | cut -d: -f1 | head -n1)";
+                                                            let cmd = "nmcli device disconnect wlan0";
                                                             Quickshell.execDetached(["sh", "-c", cmd]);
                                                         } else {
                                                             let isSec = model.security && model.security !== "" && model.security !== "Open";
@@ -3059,20 +3141,20 @@ Item {
                                             }
                                         }
 
-                                        MouseArea { id: fWifiItemMa; anchors.fill: parent; hoverEnabled: true }
+                                        MouseArea { id: fWifiRowHov; anchors.fill: parent; hoverEnabled: true; z: -1 }
                                     }
                                 }
                             }
                         }
                     }
 
-                    // --- C. Bluetooth Content ---
+                    // ── C. Bluetooth ─────────────────────────────────────────
                     ColumnLayout {
                         anchors.fill: parent
                         visible: window.activeMode === "bt"
-                        spacing: window.s(10)
+                        spacing: window.s(8)
 
-                        // If Bluetooth is OFF
+                        // BT OFF state
                         Item {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -3080,55 +3162,81 @@ Item {
 
                             ColumnLayout {
                                 anchors.centerIn: parent
-                                spacing: window.s(12)
+                                spacing: window.s(10)
 
-                                Text { Layout.alignment: Qt.AlignHCenter; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(44); color: window.subtext0; text: "󰂲" }
-                                Text { Layout.alignment: Qt.AlignHCenter; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(14); color: window.text; text: "Bluetooth Disnonaktifkan" }
-                                Text { Layout.alignment: Qt.AlignHCenter; font.family: "JetBrains Mono"; font.pixelSize: window.s(11); color: window.subtext0; text: "Aktifkan Bluetooth untuk memindai perangkat" }
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "󰂲"
+                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(48)
+                                    color: Qt.alpha(window.subtext0, 0.5)
+                                }
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "Bluetooth Dinonaktifkan"
+                                    font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(14)
+                                    color: window.text
+                                }
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "Aktifkan Bluetooth untuk memindai perangkat"
+                                    font.family: "JetBrains Mono"; font.pixelSize: window.s(10)
+                                    color: window.subtext0
+                                }
                                 Rectangle {
                                     Layout.alignment: Qt.AlignHCenter
-                                    Layout.topMargin: window.s(6)
-                                    width: window.s(160); height: window.s(34); radius: window.s(8); color: window.activeColor
+                                    Layout.topMargin: window.s(8)
+                                    width: window.s(168); height: window.s(36); radius: window.s(8)
+                                    color: fBtOnBtnHov.containsMouse ? Qt.lighter(window.activeColor, 1.1) : window.activeColor
+                                    Behavior on color { ColorAnimation { duration: 100 } }
                                     RowLayout {
                                         anchors.centerIn: parent; spacing: window.s(6)
                                         Text { text: ""; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14); color: window.base }
                                         Text { text: "Nyalakan Bluetooth"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.base }
                                     }
                                     MouseArea {
-                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        id: fBtOnBtnHov
+                                        anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                         onClicked: { Quickshell.execDetached(["bash", window.scriptsDir + "/bluetooth_panel_logic.sh", "--toggle"]); btPoller.running = true; }
                                     }
                                 }
                             }
                         }
 
-                        // If Bluetooth is ON
+                        // BT ON state
                         ColumnLayout {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             visible: window.btPower === "on"
-                            spacing: window.s(10)
+                            spacing: window.s(8)
 
-                            // Available Devices Header
+                            // Devices header + scan
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: "Perangkat Bluetooth"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(12); color: window.subtext0 }
+                                RowLayout {
+                                    spacing: window.s(5)
+                                    Text { text: "󰂯"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(12); color: window.subtext0 }
+                                    Text { text: "Perangkat Bluetooth"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.subtext0 }
+                                }
                                 Item { Layout.fillWidth: true }
                                 Rectangle {
-                                    width: window.s(76); height: window.s(24); radius: window.s(6); color: window.surface0; border.color: window.surface1; border.width: 1
+                                    width: window.s(74); height: window.s(24); radius: window.s(6)
+                                    color: fBtScanHov.containsMouse ? window.surface1 : window.surface0
+                                    border.color: window.surface2; border.width: 1
+                                    Behavior on color { ColorAnimation { duration: 100 } }
                                     RowLayout {
                                         anchors.centerIn: parent; spacing: window.s(4)
                                         Text { text: "󰑐"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(11); color: window.text }
                                         Text { text: "Pindai"; font.family: "JetBrains Mono"; font.pixelSize: window.s(10); color: window.text }
                                     }
                                     MouseArea {
-                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        id: fBtScanHov
+                                        anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                         onClicked: { Quickshell.execDetached(["bash", window.scriptsDir + "/bluetooth_panel_logic.sh", "--scan"]); btPoller.running = true; }
                                     }
                                 }
                             }
 
-                            // Scrollable list of BT devices
+                            // BT device list (KDE Plasma Style)
                             ScrollView {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
@@ -3136,20 +3244,23 @@ Item {
 
                                 ListView {
                                     anchors.fill: parent
-                                    spacing: window.s(5)
+                                    spacing: window.s(4)
                                     model: btListModel
 
                                     delegate: Rectangle {
                                         width: ListView.view.width
-                                        height: window.s(44)
+                                        height: window.s(46)
                                         radius: window.s(8)
 
                                         property bool isConn: window.btConnected && window.btConnected.some(d => d.mac === model.mac)
                                         property bool isBusy: window.busyTasks[model.mac] === true || window.connectingId === model.mac
 
-                                        color: isConn ? Qt.alpha(window.activeColor, 0.15) : (fBtItemMa.containsMouse ? window.surface1 : window.surface0)
-                                        border.color: isConn ? window.activeColor : (fBtItemMa.containsMouse ? window.surface2 : "transparent")
+                                        color: isConn ? Qt.alpha(window.activeColor, 0.12)
+                                             : (fBtRowHov.containsMouse ? window.surface1 : window.surface0)
+                                        border.color: isConn ? Qt.alpha(window.activeColor, 0.5)
+                                             : (fBtRowHov.containsMouse ? Qt.alpha(window.surface2, 0.7) : "transparent")
                                         border.width: 1
+                                        Behavior on color { ColorAnimation { duration: 100 } }
 
                                         RowLayout {
                                             anchors.fill: parent
@@ -3157,28 +3268,58 @@ Item {
                                             anchors.rightMargin: window.s(10)
                                             spacing: window.s(10)
 
-                                            Text { font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(16); color: isConn ? window.activeColor : window.text; text: model.icon || "󰂯" }
-                                            ColumnLayout {
-                                                Layout.fillWidth: true; spacing: 1
-                                                Text { text: model.name || model.mac; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: isConn ? window.activeColor : window.text; elide: Text.ElideRight }
-                                                Text { text: isConn ? "Terhubung & Siap" : (model.mac || "Available"); font.family: "JetBrains Mono"; font.pixelSize: window.s(9); color: isConn ? window.activeColor : window.subtext0 }
+                                            // Device icon badge
+                                            Rectangle {
+                                                width: window.s(30); height: window.s(30); radius: window.s(6)
+                                                color: isConn ? Qt.alpha(window.activeColor, 0.18) : Qt.alpha(window.surface2, 0.5)
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: model.icon || "󰂯"
+                                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(15)
+                                                    color: isConn ? window.activeColor : window.subtext0
+                                                }
                                             }
 
+                                            ColumnLayout {
+                                                Layout.fillWidth: true; spacing: window.s(1)
+                                                Text {
+                                                    text: model.name || model.mac
+                                                    font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11)
+                                                    color: isConn ? window.activeColor : window.text
+                                                    elide: Text.ElideRight; Layout.fillWidth: true
+                                                }
+                                                Text {
+                                                    text: isConn ? "✓ Terhubung & Siap" : (model.mac || "Tersedia")
+                                                    font.family: "JetBrains Mono"; font.pixelSize: window.s(9)
+                                                    color: isConn ? window.activeColor : window.subtext0
+                                                }
+                                            }
+
+                                            // Action button
                                             Rectangle {
-                                                width: window.s(76); height: window.s(26); radius: window.s(5)
-                                                color: isConn ? Qt.alpha(window.red, 0.15) : Qt.alpha(window.activeColor, 0.2)
-                                                border.color: isConn ? window.red : window.activeColor
+                                                width: window.s(74)
+                                                height: window.s(28)
+                                                radius: window.s(6)
+                                                color: {
+                                                    if (isBusy) return Qt.alpha(window.subtext0, 0.12);
+                                                    if (isConn) return Qt.alpha(window.red, 0.15);
+                                                    return fBtBtnHov.containsMouse ? Qt.alpha(window.activeColor, 0.3) : Qt.alpha(window.activeColor, 0.16);
+                                                }
+                                                border.color: isBusy ? Qt.alpha(window.subtext0, 0.3) : (isConn ? window.red : window.activeColor)
                                                 border.width: 1
+                                                Behavior on color { ColorAnimation { duration: 100 } }
 
                                                 Text {
                                                     anchors.centerIn: parent
                                                     text: isBusy ? "..." : (isConn ? "Putus" : "Sambung")
                                                     font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(10)
-                                                    color: isConn ? window.red : window.activeColor
+                                                    color: isBusy ? window.subtext0 : (isConn ? window.red : window.activeColor)
                                                 }
 
                                                 MouseArea {
-                                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                                    id: fBtBtnHov
+                                                    anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                                    enabled: !isBusy
                                                     onClicked: {
                                                         if (isConn) {
                                                             Quickshell.execDetached(["bluetoothctl", "disconnect", model.mac]);
@@ -3191,7 +3332,7 @@ Item {
                                             }
                                         }
 
-                                        MouseArea { id: fBtItemMa; anchors.fill: parent; hoverEnabled: true }
+                                        MouseArea { id: fBtRowHov; anchors.fill: parent; hoverEnabled: true; z: -1 }
                                     }
                                 }
                             }
@@ -3200,49 +3341,86 @@ Item {
                 }
             }
 
-            // Formal Mode Password Input Dialog Modal Overlay
+            // ── Password Dialog Modal (KDE Plasma Style) ──────────────────────
             Rectangle {
                 anchors.fill: parent
-                color: Qt.alpha(window.crust, 0.8)
+                color: Qt.alpha(window.crust, 0.82)
                 visible: window.pendingWifiId !== ""
                 z: 200
 
+                Keys.onEscapePressed: {
+                    window.pendingWifiId = "";
+                    window.pendingWifiSsid = "";
+                    fPassInput.text = "";
+                }
+                focus: window.pendingWifiId !== ""
+
                 Rectangle {
-                    width: Math.min(parent.width - window.s(40), window.s(380))
-                    height: window.s(220)
+                    width: Math.min(parent.width - window.s(40), window.s(360))
                     anchors.centerIn: parent
-                    radius: window.s(14)
+                    radius: window.s(12)
                     color: window.mantle
-                    border.color: window.activeColor
+                    border.color: Qt.alpha(window.activeColor, 0.6)
                     border.width: 1
+                    height: fPassDialogCol.implicitHeight + window.s(36)
 
                     ColumnLayout {
-                        anchors.fill: parent
+                        id: fPassDialogCol
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
                         anchors.margins: window.s(18)
                         spacing: window.s(12)
 
+                        // Dialog title
                         RowLayout {
                             spacing: window.s(10)
-                            Text { text: "󰤨"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(20); color: window.activeColor }
+
+                            Rectangle {
+                                width: window.s(36); height: window.s(36); radius: window.s(8)
+                                color: Qt.alpha(window.activeColor, 0.16)
+                                Text { anchors.centerIn: parent; text: "󰤨"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(18); color: window.activeColor }
+                            }
+
                             ColumnLayout {
-                                spacing: 1
-                                Text { text: "Kata Sandi Wi-Fi"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(13); color: window.text }
-                                Text { text: window.pendingWifiSsid; font.family: "JetBrains Mono"; font.pixelSize: window.s(11); color: window.subtext0; elide: Text.ElideRight; Layout.preferredWidth: window.s(250) }
+                                spacing: window.s(2)
+                                Text {
+                                    text: "Kata Sandi Wi-Fi"
+                                    font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(13); color: window.text
+                                }
+                                Text {
+                                    text: window.pendingWifiSsid
+                                    font.family: "JetBrains Mono"; font.pixelSize: window.s(10); color: window.subtext0
+                                    elide: Text.ElideRight; Layout.preferredWidth: window.s(230)
+                                }
                             }
                         }
 
+                        // Separator
+                        Rectangle { Layout.fillWidth: true; height: 1; color: Qt.alpha(window.surface1, 0.5) }
+
+                        // Password input field
                         Rectangle {
                             Layout.fillWidth: true
-                            height: window.s(38)
+                            height: window.s(40)
                             radius: window.s(8)
                             color: window.surface0
-                            border.color: fPassInput.activeFocus ? window.activeColor : window.surface1
-                            border.width: 1
+                            border.color: fPassInput.activeFocus ? window.activeColor : Qt.alpha(window.surface2, 0.8)
+                            border.width: fPassInput.activeFocus ? 2 : 1
+                            Behavior on border.color { ColorAnimation { duration: 120 } }
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: window.s(10)
-                                anchors.rightMargin: window.s(10)
+                                anchors.leftMargin: window.s(12)
+                                anchors.rightMargin: window.s(8)
+                                spacing: window.s(8)
+
+                                Text {
+                                    text: "󰌾"
+                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14)
+                                    color: fPassInput.activeFocus ? window.activeColor : window.subtext0
+                                    Behavior on color { ColorAnimation { duration: 120 } }
+                                }
 
                                 TextInput {
                                     id: fPassInput
@@ -3253,6 +3431,7 @@ Item {
                                     echoMode: fShowPass.checked ? TextInput.Normal : TextInput.Password
                                     verticalAlignment: TextInput.AlignVCenter
                                     focus: window.pendingWifiId !== ""
+
                                     onAccepted: {
                                         if (text.trim() !== "") {
                                             window.connectDevice("wifi", window.pendingWifiId, window.pendingWifiSsid, text);
@@ -3261,46 +3440,62 @@ Item {
                                     }
                                 }
 
-                                Text {
-                                    id: fShowPass
-                                    property bool checked: false
-                                    text: checked ? "󰈈" : "󰈉"
-                                    font.family: "Iosevka Nerd Font"
-                                    font.pixelSize: window.s(14)
-                                    color: window.subtext0
-                                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: fShowPass.checked = !fShowPass.checked }
+                                // Show/hide password toggle
+                                Rectangle {
+                                    width: window.s(28); height: window.s(28); radius: window.s(6)
+                                    color: fShowPassHov.containsMouse ? window.surface1 : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                    Text {
+                                        id: fShowPass
+                                        property bool checked: false
+                                        anchors.centerIn: parent
+                                        text: checked ? "󰈈" : "󰈉"
+                                        font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14)
+                                        color: checked ? window.activeColor : window.subtext0
+                                    }
+                                    MouseArea {
+                                        id: fShowPassHov
+                                        anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                        onClicked: fShowPass.checked = !fShowPass.checked
+                                    }
                                 }
                             }
                         }
 
-                        Item { Layout.fillHeight: true }
+                        // Hint text
+                        Text {
+                            text: "Tekan Enter untuk menyambung, Esc untuk batal"
+                            font.family: "JetBrains Mono"; font.pixelSize: window.s(9)
+                            color: Qt.alpha(window.subtext0, 0.7)
+                            Layout.alignment: Qt.AlignHCenter
+                        }
 
+                        // Action buttons
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: window.s(10)
+                            spacing: window.s(8)
 
                             Rectangle {
-                                Layout.fillWidth: true
-                                height: window.s(34)
-                                radius: window.s(8)
-                                color: window.surface0
-                                border.color: window.surface1
-                                border.width: 1
-                                Text { anchors.centerIn: parent; text: "Batal"; font.family: "JetBrains Mono"; font.pixelSize: window.s(11); color: window.text }
+                                Layout.fillWidth: true; height: window.s(36); radius: window.s(8)
+                                color: fCancelHov.containsMouse ? window.surface1 : window.surface0
+                                border.color: window.surface2; border.width: 1
+                                Behavior on color { ColorAnimation { duration: 100 } }
+                                Text { anchors.centerIn: parent; text: "Batal"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.text }
                                 MouseArea {
-                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    id: fCancelHov
+                                    anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: { window.pendingWifiId = ""; window.pendingWifiSsid = ""; fPassInput.text = ""; }
                                 }
                             }
 
                             Rectangle {
-                                Layout.fillWidth: true
-                                height: window.s(34)
-                                radius: window.s(8)
-                                color: window.activeColor
+                                Layout.fillWidth: true; height: window.s(36); radius: window.s(8)
+                                color: fConnectHov.containsMouse ? Qt.lighter(window.activeColor, 1.08) : window.activeColor
+                                Behavior on color { ColorAnimation { duration: 100 } }
                                 Text { anchors.centerIn: parent; text: "Sambung"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.base }
                                 MouseArea {
-                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    id: fConnectHov
+                                    anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         if (fPassInput.text.trim() !== "") {
                                             window.connectDevice("wifi", window.pendingWifiId, window.pendingWifiSsid, fPassInput.text);
@@ -3316,5 +3511,3 @@ Item {
         }
     }
 }
-
-
