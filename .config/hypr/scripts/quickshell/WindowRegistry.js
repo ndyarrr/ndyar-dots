@@ -72,11 +72,11 @@ function getLayout(name, mx, my, mw, mh, userScale, topbarPosition) {
         rx_set = mw - w_set; ry_set = 0;
     } else {
         // "top" (default)
-        rx_bat = mw - s(805, scale); ry_bat = s(60, scale);
-        rx_net = mw - s(904, scale); ry_net = s(60, scale);
-        rx_vol = mw - s(455, scale); ry_vol = s(60, scale);
-        rx_cal = Math.floor((mw / 2) - (w_cal / 2)); ry_cal = s(60, scale);
-        rx_mus = s(5, scale); ry_mus = s(60, scale);
+        rx_bat = mw - s(805, scale); ry_bat = s(56, scale);
+        rx_net = mw - s(904, scale); ry_net = s(56, scale);
+        rx_vol = mw - s(455, scale); ry_vol = s(56, scale);
+        rx_cal = Math.floor((mw / 2) - (w_cal / 2)); ry_cal = s(56, scale);
+        rx_mus = s(5, scale); ry_mus = s(56, scale);
         rx_set = 0; ry_set = 0;
     }
 

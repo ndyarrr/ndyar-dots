@@ -225,7 +225,7 @@ Item {
                 masterWindow.animY = Math.max(Math.round(10 * masterWindow.globalUiScale), masterWindow.height - dynH - Math.round(10 * masterWindow.globalUiScale));
             } else {
                 masterWindow.animX = masterWindow.width - dynW - Math.round(4 * masterWindow.globalUiScale);
-                masterWindow.animY = Math.round(60 * masterWindow.globalUiScale);
+                masterWindow.animY = Math.round(56 * masterWindow.globalUiScale);
             }
         }
     }
@@ -2576,28 +2576,15 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: window.s(14)
+            radius: window.s(20)
             color: window.base
-            border.color: Qt.alpha(window.surface1, 0.7)
+            border.color: window.surface0
             border.width: 1
             clip: true
 
-            // Top accent indicator line
-            Rectangle {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: window.s(3)
-                color: window.activeColor
-                radius: window.s(2)
-            }
-
             ColumnLayout {
                 anchors.fill: parent
-                anchors.topMargin: window.s(12)
-                anchors.leftMargin: window.s(16)
-                anchors.rightMargin: window.s(16)
-                anchors.bottomMargin: window.s(14)
+                anchors.margins: window.s(16)
                 spacing: window.s(10)
 
                 // ── 1. Header Row (KDE Plasma Style) ─────────────────────────
@@ -2607,8 +2594,8 @@ Item {
 
                     // Icon badge
                     Rectangle {
-                        width: window.s(40)
-                        height: window.s(40)
+                        width: window.s(38)
+                        height: window.s(38)
                         radius: window.s(10)
                         color: Qt.alpha(window.activeColor, 0.16)
                         border.color: Qt.alpha(window.activeColor, 0.35)
@@ -2616,9 +2603,9 @@ Item {
 
                         Text {
                             anchors.centerIn: parent
-                            text: window.activeMode === eth ? "󰈀" : (window.activeMode === "wifi" ? "󰤨" : "󰂯")
+                            text: window.activeMode === "eth" ? "󰈀" : (window.activeMode === "wifi" ? "󰤨" : "󰂯")
                             font.family: "Iosevka Nerd Font"
-                            font.pixelSize: window.s(22)
+                            font.pixelSize: window.s(20)
                             color: window.activeColor
                         }
                     }
@@ -2629,7 +2616,7 @@ Item {
                             text: window.activeMode === "eth" ? "Ethernet" : (window.activeMode === "wifi" ? "Jaringan Wi-Fi" : "Perangkat Bluetooth")
                             font.family: "JetBrains Mono"
                             font.weight: Font.Bold
-                            font.pixelSize: window.s(14)
+                            font.pixelSize: window.s(13)
                             color: window.text
                         }
                         Text {
@@ -2653,7 +2640,7 @@ Item {
                     // Power Toggle Pill Switch (Wi-Fi / BT only)
                     Rectangle {
                         id: fPowerToggle
-                        width: window.s(52)
+                        width: window.s(50)
                         height: window.s(26)
                         radius: window.s(13)
                         visible: window.activeMode !== "eth"
@@ -2693,8 +2680,8 @@ Item {
 
                     // Refresh button for Ethernet
                     Rectangle {
-                        width: window.s(30)
-                        height: window.s(30)
+                        width: window.s(28)
+                        height: window.s(28)
                         radius: window.s(8)
                         visible: window.activeMode === "eth"
                         color: fEthRefHov.containsMouse ? window.surface1 : window.surface0
@@ -2706,7 +2693,7 @@ Item {
                             anchors.centerIn: parent
                             text: "󰑐"
                             font.family: "Iosevka Nerd Font"
-                            font.pixelSize: window.s(14)
+                            font.pixelSize: window.s(13)
                             color: window.text
                         }
                         MouseArea {
@@ -2722,7 +2709,7 @@ Item {
                 // ── 2. Segmented Mode Switcher Tabs ──────────────────────────
                 Rectangle {
                     Layout.fillWidth: true
-                    height: window.s(34)
+                    height: window.s(32)
                     radius: window.s(8)
                     color: window.mantle
                     border.color: Qt.alpha(window.surface1, 0.5)
@@ -2819,13 +2806,13 @@ Item {
 
                             ColumnLayout {
                                 anchors.fill: parent
-                                anchors.margins: window.s(16)
+                                anchors.margins: window.s(14)
                                 spacing: window.s(10)
 
                                 // ETH status card
                                 Rectangle {
                                     Layout.fillWidth: true
-                                    height: window.s(60)
+                                    height: window.s(56)
                                     radius: window.s(8)
                                     color: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged")
                                         ? Qt.alpha(window.activeColor, 0.12) : Qt.alpha(window.red, 0.08)
@@ -2835,13 +2822,13 @@ Item {
 
                                     RowLayout {
                                         anchors.fill: parent
-                                        anchors.leftMargin: window.s(14)
-                                        anchors.rightMargin: window.s(14)
-                                        spacing: window.s(12)
+                                        anchors.leftMargin: window.s(12)
+                                        anchors.rightMargin: window.s(12)
+                                        spacing: window.s(10)
 
                                         Text {
                                             font.family: "Iosevka Nerd Font"
-                                            font.pixelSize: window.s(28)
+                                            font.pixelSize: window.s(26)
                                             color: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? window.activeColor : window.red
                                             text: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? "󰈀" : "󰈂"
                                         }
@@ -2849,7 +2836,7 @@ Item {
                                             spacing: window.s(2)
                                             Text {
                                                 text: (window.ethConnected && window.ethConnected.ip !== "Cable Unplugged") ? "Koneksi Kabel Aktif" : "Kabel Tidak Terhubung"
-                                                font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(13)
+                                                font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(12)
                                                 color: window.text
                                             }
                                             Text {
@@ -2873,7 +2860,7 @@ Item {
                                     ]
                                     delegate: Rectangle {
                                         Layout.fillWidth: true
-                                        height: window.s(34)
+                                        height: window.s(32)
                                         radius: window.s(6)
                                         color: window.surface0
 
@@ -2882,7 +2869,7 @@ Item {
                                             anchors.leftMargin: window.s(10)
                                             anchors.rightMargin: window.s(10)
                                             spacing: window.s(8)
-                                            Text { text: modelData.icon; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(13); color: window.subtext0 }
+                                            Text { text: modelData.icon; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(12); color: window.subtext0 }
                                             Text { text: modelData.label; font.family: "JetBrains Mono"; font.pixelSize: window.s(10); color: window.subtext0 }
                                             Item { Layout.fillWidth: true }
                                             Text { text: modelData.val; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(10); color: window.text }
@@ -2914,13 +2901,13 @@ Item {
                                 Text {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "󰤮"
-                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(48)
+                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(44)
                                     color: Qt.alpha(window.subtext0, 0.5)
                                 }
                                 Text {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "Wi-Fi Dinonaktifkan"
-                                    font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(14)
+                                    font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(13)
                                     color: window.text
                                 }
                                 Text {
@@ -2931,13 +2918,13 @@ Item {
                                 }
                                 Rectangle {
                                     Layout.alignment: Qt.AlignHCenter
-                                    Layout.topMargin: window.s(8)
-                                    width: window.s(150); height: window.s(36); radius: window.s(8)
+                                    Layout.topMargin: window.s(6)
+                                    width: window.s(148); height: window.s(34); radius: window.s(8)
                                     color: fWifiOnBtnHov.containsMouse ? Qt.lighter(window.activeColor, 1.1) : window.activeColor
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                     RowLayout {
                                         anchors.centerIn: parent; spacing: window.s(6)
-                                        Text { text: ""; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14); color: window.base }
+                                        Text { text: ""; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(13); color: window.base }
                                         Text { text: "Nyalakan Wi-Fi"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.base }
                                     }
                                     MouseArea {
@@ -2959,7 +2946,7 @@ Item {
                             // Connected network card (KDE Plasma Style)
                             Rectangle {
                                 Layout.fillWidth: true
-                                height: window.s(58)
+                                height: window.s(54)
                                 radius: window.s(8)
                                 color: Qt.alpha(window.activeColor, 0.10)
                                 border.color: Qt.alpha(window.activeColor, 0.5)
@@ -2973,12 +2960,12 @@ Item {
                                     spacing: window.s(10)
 
                                     Rectangle {
-                                        width: window.s(34); height: window.s(34); radius: window.s(8)
+                                        width: window.s(32); height: window.s(32); radius: window.s(6)
                                         color: Qt.alpha(window.activeColor, 0.18)
-                                        Text { anchors.centerIn: parent; text: "󰤨"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(18); color: window.activeColor }
+                                        Text { anchors.centerIn: parent; text: "󰤨"; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(16); color: window.activeColor }
                                     }
                                     ColumnLayout {
-                                        Layout.fillWidth: true; spacing: window.s(2)
+                                        Layout.fillWidth: true; spacing: window.s(1)
                                         Text {
                                             text: window.wifiConnected ? window.wifiConnected.ssid : ""
                                             font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(12); color: window.text; elide: Text.ElideRight
@@ -2986,11 +2973,11 @@ Item {
                                         }
                                         Text {
                                             text: "Terhubung • Sinyal: " + (window.wifiConnected ? (window.wifiConnected.signal || 100) : 100) + "%"
-                                            font.family: "JetBrains Mono"; font.pixelSize: window.s(10); color: window.subtext0
+                                            font.family: "JetBrains Mono"; font.pixelSize: window.s(9); color: window.subtext0
                                         }
                                     }
                                     Rectangle {
-                                        width: window.s(78); height: window.s(28); radius: window.s(6)
+                                        width: window.s(76); height: window.s(26); radius: window.s(6)
                                         color: fWifiDiscHov.containsMouse ? Qt.alpha(window.red, 0.25) : Qt.alpha(window.red, 0.12)
                                         border.color: Qt.alpha(window.red, 0.6); border.width: 1
                                         Behavior on color { ColorAnimation { duration: 100 } }
@@ -3018,7 +3005,7 @@ Item {
                                 }
                                 Item { Layout.fillWidth: true }
                                 Rectangle {
-                                    width: window.s(74); height: window.s(24); radius: window.s(6)
+                                    width: window.s(72); height: window.s(24); radius: window.s(6)
                                     color: fWifiScanHov.containsMouse ? window.surface1 : window.surface0
                                     border.color: window.surface2; border.width: 1
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -3048,7 +3035,7 @@ Item {
 
                                     delegate: Rectangle {
                                         width: ListView.view.width
-                                        height: window.s(46)
+                                        height: window.s(44)
                                         radius: window.s(8)
 
                                         property bool isConn: window.wifiConnected && (window.wifiConnected.ssid === model.ssid || window.wifiConnected.ssid === model.id)
@@ -3069,12 +3056,12 @@ Item {
 
                                             // Signal icon badge
                                             Rectangle {
-                                                width: window.s(30); height: window.s(30); radius: window.s(6)
+                                                width: window.s(28); height: window.s(28); radius: window.s(6)
                                                 color: isConn ? Qt.alpha(window.activeColor, 0.18) : Qt.alpha(window.surface2, 0.5)
                                                 Text {
                                                     anchors.centerIn: parent
                                                     text: model.icon || "󰤨"
-                                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(15)
+                                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14)
                                                     color: isConn ? window.activeColor : window.subtext0
                                                 }
                                             }
@@ -3096,8 +3083,8 @@ Item {
 
                                             // Action button
                                             Rectangle {
-                                                width: window.s(74)
-                                                height: window.s(28)
+                                                width: window.s(72)
+                                                height: window.s(26)
                                                 radius: window.s(6)
                                                 color: {
                                                     if (isBusy) return Qt.alpha(window.subtext0, 0.12);
@@ -3167,13 +3154,13 @@ Item {
                                 Text {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "󰂲"
-                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(48)
+                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(44)
                                     color: Qt.alpha(window.subtext0, 0.5)
                                 }
                                 Text {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "Bluetooth Dinonaktifkan"
-                                    font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(14)
+                                    font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(13)
                                     color: window.text
                                 }
                                 Text {
@@ -3184,13 +3171,13 @@ Item {
                                 }
                                 Rectangle {
                                     Layout.alignment: Qt.AlignHCenter
-                                    Layout.topMargin: window.s(8)
-                                    width: window.s(168); height: window.s(36); radius: window.s(8)
+                                    Layout.topMargin: window.s(6)
+                                    width: window.s(164); height: window.s(34); radius: window.s(8)
                                     color: fBtOnBtnHov.containsMouse ? Qt.lighter(window.activeColor, 1.1) : window.activeColor
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                     RowLayout {
                                         anchors.centerIn: parent; spacing: window.s(6)
-                                        Text { text: ""; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14); color: window.base }
+                                        Text { text: ""; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(13); color: window.base }
                                         Text { text: "Nyalakan Bluetooth"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.base }
                                     }
                                     MouseArea {
@@ -3219,7 +3206,7 @@ Item {
                                 }
                                 Item { Layout.fillWidth: true }
                                 Rectangle {
-                                    width: window.s(74); height: window.s(24); radius: window.s(6)
+                                    width: window.s(72); height: window.s(24); radius: window.s(6)
                                     color: fBtScanHov.containsMouse ? window.surface1 : window.surface0
                                     border.color: window.surface2; border.width: 1
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -3249,7 +3236,7 @@ Item {
 
                                     delegate: Rectangle {
                                         width: ListView.view.width
-                                        height: window.s(46)
+                                        height: window.s(44)
                                         radius: window.s(8)
 
                                         property bool isConn: window.btConnected && window.btConnected.some(d => d.mac === model.mac)
@@ -3270,12 +3257,12 @@ Item {
 
                                             // Device icon badge
                                             Rectangle {
-                                                width: window.s(30); height: window.s(30); radius: window.s(6)
+                                                width: window.s(28); height: window.s(28); radius: window.s(6)
                                                 color: isConn ? Qt.alpha(window.activeColor, 0.18) : Qt.alpha(window.surface2, 0.5)
                                                 Text {
                                                     anchors.centerIn: parent
                                                     text: model.icon || "󰂯"
-                                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(15)
+                                                    font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14)
                                                     color: isConn ? window.activeColor : window.subtext0
                                                 }
                                             }
@@ -3297,8 +3284,8 @@ Item {
 
                                             // Action button
                                             Rectangle {
-                                                width: window.s(74)
-                                                height: window.s(28)
+                                                width: window.s(72)
+                                                height: window.s(26)
                                                 radius: window.s(6)
                                                 color: {
                                                     if (isBusy) return Qt.alpha(window.subtext0, 0.12);
@@ -3402,7 +3389,7 @@ Item {
                         // Password input field
                         Rectangle {
                             Layout.fillWidth: true
-                            height: window.s(40)
+                            height: window.s(38)
                             radius: window.s(8)
                             color: window.surface0
                             border.color: fPassInput.activeFocus ? window.activeColor : Qt.alpha(window.surface2, 0.8)
@@ -3476,7 +3463,7 @@ Item {
                             spacing: window.s(8)
 
                             Rectangle {
-                                Layout.fillWidth: true; height: window.s(36); radius: window.s(8)
+                                Layout.fillWidth: true; height: window.s(34); radius: window.s(8)
                                 color: fCancelHov.containsMouse ? window.surface1 : window.surface0
                                 border.color: window.surface2; border.width: 1
                                 Behavior on color { ColorAnimation { duration: 100 } }
@@ -3489,7 +3476,7 @@ Item {
                             }
 
                             Rectangle {
-                                Layout.fillWidth: true; height: window.s(36); radius: window.s(8)
+                                Layout.fillWidth: true; height: window.s(34); radius: window.s(8)
                                 color: fConnectHov.containsMouse ? Qt.lighter(window.activeColor, 1.08) : window.activeColor
                                 Behavior on color { ColorAnimation { duration: 100 } }
                                 Text { anchors.centerIn: parent; text: "Sambung"; font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(11); color: window.base }

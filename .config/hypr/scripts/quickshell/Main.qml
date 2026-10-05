@@ -347,7 +347,7 @@ PanelWindow {
                 } else if (masterWindow.topbarPosition === "left" || masterWindow.topbarPosition === "right") {
                     finalY = Math.max(Math.round(10 * masterWindow.globalUiScale), masterWindow.height - finalH - Math.round(10 * masterWindow.globalUiScale));
                 } else {
-                    finalY = Math.round(60 * masterWindow.globalUiScale);
+                    finalY = Math.round(56 * masterWindow.globalUiScale);
                 }
             }
         }
@@ -565,7 +565,7 @@ PanelWindow {
                     } else if (masterWindow.topbarPosition === "left" || masterWindow.topbarPosition === "right") {
                         masterWindow.animY = Math.max(Math.round(10 * masterWindow.globalUiScale), masterWindow.height - dynH - Math.round(10 * masterWindow.globalUiScale));
                     } else {
-                        masterWindow.animY = Math.round(60 * masterWindow.globalUiScale);
+                        masterWindow.animY = Math.round(56 * masterWindow.globalUiScale);
                     }
                 }
             }
