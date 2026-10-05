@@ -1091,20 +1091,25 @@ Item {
 
             // Off-State Styled Container for Orbit/Current View when Power is OFF or Disconnected
             Rectangle {
+                id: offStateCard
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: window.s(-30)
-                width: window.s(330)
-                height: (window.activeMode === "bt" && btListModel.count > 0) ? window.s(260) : window.s(170)
+                width: window.s(340)
+                height: mainOffColLayout.implicitHeight + window.s(36)
                 radius: window.s(20)
                 color: Qt.alpha(window.mantle, 0.95)
                 border.color: Qt.alpha(window.surface1, 0.8)
                 border.width: 1
                 visible: !window.currentPower && !window.isFormalMode
                 z: 10
+                clip: true
 
                 ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: window.s(20)
+                    id: mainOffColLayout
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.margins: window.s(18)
                     spacing: window.s(12)
 
                     RowLayout {
@@ -1145,7 +1150,8 @@ Item {
                     ListView {
                         id: offStateListView
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        Layout.preferredHeight: (window.activeMode === "bt" && count > 0) ? Math.min(contentHeight, window.s(90)) : 0
+                        Layout.maximumHeight: window.s(90)
                         spacing: window.s(6)
                         clip: true
                         model: window.activeMode === "bt" ? btListModel : null
