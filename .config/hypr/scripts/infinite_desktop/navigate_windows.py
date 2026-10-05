@@ -1,48 +1,35 @@
 #!/usr/bin/env python3
 """
 navigate_windows.py
-Navega entre ventanas del workspace activo usando Super+flechas.
+Navigate between windows on active workspace using Super+Arrows.
 
-- Flotante: mueve todas las ventanas para centrar la objetivo (infinite canvas)
-- Tileado master: movefocus l/r/u/d
-- Tileado dwindle: movefocus left/right/up/down
-
-Uso: python3 navigate_windows.py <left|right|up|down>
+- Floating (Infinite Canvas): smoothly pans canvas to center the target window in chosen direction and focuses it.
+- Tiled: moves focus in the chosen direction (left/right/up/down).
 """
 
-import subprocess
 import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hypr_ipc import hyprctl_json, move_focus, move_window_exact_lua, focus_window, batch_async
 
-PROTECTED_APPS = ['brave-browser', 'chromium', 'chromium-browser', 'google-chrome',
-                  'firefox', 'firefoxdeveloperedition', 'librewolf', 'vivaldi',
-                  'opera', 'microsoft-edge']
-
-DIR_SHORT = {"left": "l", "right": "r", "up": "u", "down": "d"}
-
-
-def movefocus(direction):
-    # La wiki documenta el selector de direccion de hl.dsp.focus como l/r/u/d
-    # sin importar el layout.
-    move_focus(DIR_SHORT[direction])
-
 
 def get_monitor_center():
-    monitors = hyprctl_json(["monitors"]) or []
-    for m in monitors:
-        if m.get("focused"):
-            scale = float(m.get("scale", 1.0))
-            log_w = int(m["width"] / scale)
-            log_h = int(m["height"] / scale)
-            reserved = m.get("reserved", [0, 0, 0, 0])
-            top_res = reserved[1] if len(reserved) > 1 else 0
-            bottom_res = reserved[3] if len(reserved) > 3 else 0
-            cx = m.get("x", 0) + (log_w // 2)
-            cy = m.get("y", 0) + top_res + ((log_h - top_res - bottom_res) // 2)
-            return int(cx), int(cy)
+    try:
+        monitors = hyprctl_json(["monitors"]) or []
+        for m in monitors:
+            if m.get("focused"):
+                scale = float(m.get("scale", 1.0))
+                log_w = int(m["width"] / scale)
+                log_h = int(m["height"] / scale)
+                reserved = m.get("reserved", [0, 0, 0, 0])
+                top_res = reserved[1] if len(reserved) > 1 else 0
+                bottom_res = reserved[3] if len(reserved) > 3 else 0
+                cx = m.get("x", 0) + (log_w // 2)
+                cy = m.get("y", 0) + top_res + ((log_h - top_res - bottom_res) // 2)
+                return int(cx), int(cy)
+    except Exception:
+        pass
     return 640, 380
 
 
@@ -53,12 +40,12 @@ def get_window_center(w):
 def get_window_bounds(w):
     x, y = w["at"][0], w["at"][1]
     ww, wh = w["size"][0], w["size"][1]
-    return {"left": x, "right": x+ww, "top": y, "bottom": y+wh,
-            "center_x": x+ww//2, "center_y": y+wh//2}
-
-
-def is_protected(w):
-    return any(app in w.get("class", "").lower() for app in PROTECTED_APPS)
+    return {
+        "left": x, "right": x + ww,
+        "top": y, "bottom": y + wh,
+        "center_x": x + ww // 2,
+        "center_y": y + wh // 2
+    }
 
 
 def overlap_h(b1, b2):
@@ -72,6 +59,7 @@ def overlap_v(b1, b2):
 def find_target(floating, current_bounds, center, direction):
     cx, cy = center
 
+    # 1. Look for windows directly aligned in the requested direction
     aligned = []
     for w in floating:
         b = get_window_bounds(w)
@@ -88,6 +76,7 @@ def find_target(floating, current_bounds, center, direction):
     if aligned:
         return sorted(aligned, key=lambda x: x[1])[0][0]
 
+    # 2. Look for any window in the general direction
     same_dir = []
     for w in floating:
         b = get_window_bounds(w)
@@ -100,7 +89,8 @@ def find_target(floating, current_bounds, center, direction):
     if same_dir:
         return sorted(same_dir, key=lambda x: x[1])[0][0]
 
-    opp = {"left":"right","right":"left","up":"down","down":"up"}[direction]
+    # 3. Wrap around to the farthest window in the opposite direction
+    opp = {"left": "right", "right": "left", "up": "down", "down": "up"}[direction]
     wrap = []
     for w in floating:
         b = get_window_bounds(w)
@@ -111,7 +101,7 @@ def find_target(floating, current_bounds, center, direction):
         elif opp == "down" and wy > cy: wrap.append((w, wy - cy))
 
     if wrap:
-        return sorted(wrap, key=lambda x: x[1])[0][0]
+        return sorted(wrap, key=lambda x: x[1], reverse=True)[0][0]
 
     return None
 
@@ -130,45 +120,49 @@ def pan_to_window(floating, target_addr, center_x, center_y):
     for w in floating:
         nx = w["at"][0] + dx
         ny = w["at"][1] + dy
-        exprs.append(move_window_exact_lua(int(nx), int(ny), w["address"]))
+        exprs.append(move_window_exact_lua(int(round(nx)), int(round(ny)), w["address"]))
 
     batch_async(exprs)
-
-    if not is_protected(target):
-        focus_window(target_addr)
+    focus_window(target_addr)
 
 
 def main():
     if len(sys.argv) < 2 or sys.argv[1] not in ("left", "right", "up", "down"):
-        print("Uso: navigate_windows.py <left|right|up|down>")
+        print("Usage: navigate_windows.py <left|right|up|down>")
         sys.exit(1)
 
     direction = sys.argv[1]
 
     ws = hyprctl_json(["activeworkspace"])
     if not ws:
-        sys.exit(1)
-    workspace_id = ws["id"]
+        sys.exit(0)
+    workspace_id = ws.get("id", 1)
 
     clients = hyprctl_json(["clients"]) or []
     ws_clients = [w for w in clients if w.get("workspace", {}).get("id") == workspace_id]
+    if not ws_clients:
+        sys.exit(0)
+
     floating = [w for w in ws_clients if w.get("floating")]
 
-    # ── modo mosaico ──────────────────────────────────────────────────────────
+    # ── Tiled Mode ────────────────────────────────────────────────────────────
     if not floating:
-        movefocus(direction)
+        move_focus(direction)
         return
 
-    # ── modo flotante ──────────────────────────────────────
-    if len(floating) <= 1:
-        return
-
+    # ── Floating Mode (Infinite Canvas) ───────────────────────────────────────
     center_x, center_y = get_monitor_center()
+
+    if len(floating) == 1:
+        pan_to_window(floating, floating[0]["address"], center_x, center_y)
+        return
+
     focused = hyprctl_json(["activewindow"])
 
+    # Determine reference window
     window_near_center = any(
-        abs(get_window_center(w)[0] - center_x) < 100 and
-        abs(get_window_center(w)[1] - center_y) < 100
+        abs(get_window_center(w)[0] - center_x) < 150 and
+        abs(get_window_center(w)[1] - center_y) < 150
         for w in floating
     )
 
@@ -176,9 +170,8 @@ def main():
         closest = min(
             floating,
             key=lambda w: (
-                ((get_window_center(w)[0] - center_x)**2 +
-                 (get_window_center(w)[1] - center_y)**2) ** 0.5
-                + (1000 if is_protected(w) else 0)
+                (get_window_center(w)[0] - center_x) ** 2 +
+                (get_window_center(w)[1] - center_y) ** 2
             )
         )
         pan_to_window(floating, closest["address"], center_x, center_y)
@@ -186,8 +179,10 @@ def main():
 
     current_bounds = get_window_bounds(focused)
     target = find_target(floating, current_bounds, (center_x, center_y), direction)
-    if target:
+    if target and target["address"] != focused.get("address"):
         pan_to_window(floating, target["address"], center_x, center_y)
+    elif target:
+        focus_window(target["address"])
 
 
 if __name__ == "__main__":

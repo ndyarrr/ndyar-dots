@@ -108,7 +108,7 @@
       "mods": "SUPER",
       "key": "T",
       "dispatcher": "exec",
-      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/floating_tile_toggle.py"
+      "command": "bash -c \"python3 /home/ndyar/.config/hypr/scripts/infinite_desktop/floating_tile_toggle.py\""
     },
     {
       "type": "bind",
@@ -143,14 +143,14 @@
       "mods": "SUPER",
       "key": "C",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh toggle clipboard"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh toggle clipboard"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "P",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh toggle movies"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh toggle movies"
     },
     {
       "type": "bind",
@@ -248,28 +248,28 @@
       "mods": "",
       "key": "Print",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/screenshot.sh"
+      "command": "bash ~/.config/hypr/scripts/screenshot.sh"
     },
     {
       "type": "bindl",
       "mods": "SHIFT",
       "key": "Print",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/screenshot.sh --edit"
+      "command": "bash ~/.config/hypr/scripts/screenshot.sh --edit"
     },
     {
       "type": "bindl",
       "mods": "SUPER",
       "key": "Print",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/screenshot.sh --full"
+      "command": "bash ~/.config/hypr/scripts/screenshot.sh --full"
     },
     {
       "type": "bindl",
       "mods": "SUPER SHIFT",
       "key": "Print",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/screenshot.sh --full --edit"
+      "command": "bash ~/.config/hypr/scripts/screenshot.sh --full --edit"
     },
     {
       "type": "bindl",
@@ -339,147 +339,147 @@
       "mods": "SUPER",
       "key": "1",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 1"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 1"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "2",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 2"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 2"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "3",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 3"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 3"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "4",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 4"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 4"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "5",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 5"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 5"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "6",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 6"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 6"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "7",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 7"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 7"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "8",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 8"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 8"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "9",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 9"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 9"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "0",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 10"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 10"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "1",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 1 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 1 move"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "2",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 2 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 2 move"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "3",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 3 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 3 move"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "4",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 4 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 4 move"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "5",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 5 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 5 move"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "6",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 6 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 6 move"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "7",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 7 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 7 move"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "8",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 8 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 8 move"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "9",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 9 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 9 move"
     },
     {
       "type": "bind",
       "mods": "SUPER SHIFT",
       "key": "0",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 10 move"
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 10 move"
     },
     {
       "type": "bind",
       "mods": "SUPER",
       "key": "TAB",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/focus_next_monitor.sh"
+      "command": "bash ~/.config/hypr/scripts/focus_next_monitor.sh"
     }
   ],
   "startup": [

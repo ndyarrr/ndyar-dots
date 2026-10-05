@@ -124,7 +124,7 @@ compile_settings() {
         end) as $combo |
 
         (.dispatcher // "exec") as $disp |
-        (.command // "") as $cmd |
+        (.command // "" | gsub("(^|[ ])~(?=[/ ]|$)"; "\\1$HOME")) as $cmd |
 
         (
           if $disp == "killactive" or $cmd == "hyprctl dispatch killactive" then

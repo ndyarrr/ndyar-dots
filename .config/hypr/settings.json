@@ -97,7 +97,7 @@
       "mods": "SUPER",
       "key": "left",
       "dispatcher": "exec",
-      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py left",
+      "command": "bash -c \"python3 /home/ndyar/.config/hypr/scripts/infinite_desktop/navigate_windows.py left\"",
       "isEditing": false
     },
     {
@@ -105,7 +105,7 @@
       "mods": "SUPER",
       "key": "right",
       "dispatcher": "exec",
-      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py right",
+      "command": "bash -c \"python3 /home/ndyar/.config/hypr/scripts/infinite_desktop/navigate_windows.py right\"",
       "isEditing": false
     },
     {
@@ -113,7 +113,7 @@
       "mods": "SUPER",
       "key": "up",
       "dispatcher": "exec",
-      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py up",
+      "command": "bash -c \"python3 /home/ndyar/.config/hypr/scripts/infinite_desktop/navigate_windows.py up\"",
       "isEditing": false
     },
     {
@@ -121,7 +121,7 @@
       "mods": "SUPER",
       "key": "down",
       "dispatcher": "exec",
-      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/navigate_windows.py down",
+      "command": "bash -c \"python3 /home/ndyar/.config/hypr/scripts/infinite_desktop/navigate_windows.py down\"",
       "isEditing": false
     },
     {
@@ -129,7 +129,7 @@
       "mods": "SUPER",
       "key": "T",
       "dispatcher": "exec",
-      "command": "python3 ~/.config/hypr/scripts/infinite_desktop/floating_tile_toggle.py",
+      "command": "bash -c \"python3 /home/ndyar/.config/hypr/scripts/infinite_desktop/floating_tile_toggle.py\"",
       "isEditing": false
     },
     {
@@ -169,7 +169,7 @@
       "mods": "SUPER",
       "key": "C",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh toggle clipboard",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh toggle clipboard",
       "isEditing": false
     },
     {
@@ -177,7 +177,7 @@
       "mods": "SUPER",
       "key": "P",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh toggle movies",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh toggle movies",
       "isEditing": false
     },
     {
@@ -289,7 +289,7 @@
       "mods": "",
       "key": "Print",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/screenshot.sh",
+      "command": "bash ~/.config/hypr/scripts/screenshot.sh",
       "isEditing": false
     },
     {
@@ -297,7 +297,7 @@
       "mods": "SHIFT_L",
       "key": "Print",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/screenshot.sh --edit",
+      "command": "bash ~/.config/hypr/scripts/screenshot.sh --edit",
       "isEditing": false
     },
     {
@@ -305,7 +305,7 @@
       "mods": "SUPER",
       "key": "Print",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/screenshot.sh --full",
+      "command": "bash ~/.config/hypr/scripts/screenshot.sh --full",
       "isEditing": false
     },
     {
@@ -313,7 +313,7 @@
       "mods": "SUPER SHIFT_L",
       "key": "Print",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/screenshot.sh --full --edit",
+      "command": "bash ~/.config/hypr/scripts/screenshot.sh --full --edit",
       "isEditing": false
     },
     {
@@ -393,7 +393,7 @@
       "mods": "SUPER",
       "key": "1",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 1",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 1",
       "isEditing": false
     },
     {
@@ -401,7 +401,7 @@
       "mods": "SUPER",
       "key": "2",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 2",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 2",
       "isEditing": false
     },
     {
@@ -409,7 +409,7 @@
       "mods": "SUPER",
       "key": "3",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 3",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 3",
       "isEditing": false
     },
     {
@@ -417,7 +417,7 @@
       "mods": "SUPER",
       "key": "4",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 4",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 4",
       "isEditing": false
     },
     {
@@ -425,7 +425,7 @@
       "mods": "SUPER",
       "key": "5",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 5",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 5",
       "isEditing": false
     },
     {
@@ -433,7 +433,7 @@
       "mods": "SUPER",
       "key": "6",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 6",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 6",
       "isEditing": false
     },
     {
@@ -441,7 +441,7 @@
       "mods": "SUPER",
       "key": "7",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 7",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 7",
       "isEditing": false
     },
     {
@@ -449,7 +449,7 @@
       "mods": "SUPER",
       "key": "8",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 8",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 8",
       "isEditing": false
     },
     {
@@ -457,7 +457,7 @@
       "mods": "SUPER",
       "key": "9",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 9",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 9",
       "isEditing": false
     },
     {
@@ -465,7 +465,7 @@
       "mods": "SUPER",
       "key": "0",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 10",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 10",
       "isEditing": false
     },
     {
@@ -473,7 +473,7 @@
       "mods": "SUPER SHIFT",
       "key": "1",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 1 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 1 move",
       "isEditing": false
     },
     {
@@ -481,7 +481,7 @@
       "mods": "SUPER SHIFT",
       "key": "2",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 2 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 2 move",
       "isEditing": false
     },
     {
@@ -489,7 +489,7 @@
       "mods": "SUPER SHIFT",
       "key": "3",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 3 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 3 move",
       "isEditing": false
     },
     {
@@ -497,7 +497,7 @@
       "mods": "SUPER SHIFT",
       "key": "4",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 4 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 4 move",
       "isEditing": false
     },
     {
@@ -505,7 +505,7 @@
       "mods": "SUPER SHIFT",
       "key": "5",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 5 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 5 move",
       "isEditing": false
     },
     {
@@ -513,7 +513,7 @@
       "mods": "SUPER SHIFT",
       "key": "6",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 6 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 6 move",
       "isEditing": false
     },
     {
@@ -521,7 +521,7 @@
       "mods": "SUPER SHIFT",
       "key": "7",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 7 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 7 move",
       "isEditing": false
     },
     {
@@ -529,7 +529,7 @@
       "mods": "SUPER SHIFT",
       "key": "8",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 8 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 8 move",
       "isEditing": false
     },
     {
@@ -537,7 +537,7 @@
       "mods": "SUPER SHIFT",
       "key": "9",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 9 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 9 move",
       "isEditing": false
     },
     {
@@ -545,7 +545,7 @@
       "mods": "SUPER SHIFT",
       "key": "0",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/qs_manager.sh 10 move",
+      "command": "bash ~/.config/hypr/scripts/qs_manager.sh 10 move",
       "isEditing": false
     },
     {
@@ -553,7 +553,7 @@
       "mods": "SUPER",
       "key": "TAB",
       "dispatcher": "exec",
-      "command": "~/.config/hypr/scripts/focus_next_monitor.sh",
+      "command": "bash ~/.config/hypr/scripts/focus_next_monitor.sh",
       "isEditing": false
     }
   ],
