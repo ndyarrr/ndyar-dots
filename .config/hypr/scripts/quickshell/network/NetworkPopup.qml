@@ -1094,106 +1094,118 @@ Item {
                 id: offStateCard
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: window.s(-30)
-                width: window.s(340)
-                height: mainOffColLayout.implicitHeight + window.s(36)
+                width: window.s(380)
+                height: mainOffColLayout.implicitHeight + window.s(40)
                 radius: window.s(20)
                 color: Qt.alpha(window.mantle, 0.95)
                 border.color: Qt.alpha(window.surface1, 0.8)
                 border.width: 1
                 visible: !window.currentPower && !window.isFormalMode
                 z: 10
-                clip: true
 
                 ColumnLayout {
                     id: mainOffColLayout
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.margins: window.s(18)
+                    anchors.fill: parent
+                    anchors.margins: window.s(20)
                     spacing: window.s(12)
 
+                    // 1. Header Row
                     RowLayout {
-                        Layout.alignment: Qt.AlignHCenter
-                        spacing: window.s(10)
+                        Layout.fillWidth: true
+                        spacing: window.s(12)
 
-                        Text {
-                            font.family: "Iosevka Nerd Font"
-                            font.pixelSize: window.s(28)
-                            color: window.subtext0
-                            text: window.activeMode === "wifi" ? "󰤮" : (window.activeMode === "eth" ? "󰈂" : "󰂲")
-                        }
-                        ColumnLayout {
-                            spacing: 2
+                        Rectangle {
+                            width: window.s(38)
+                            height: window.s(38)
+                            radius: window.s(10)
+                            color: Qt.alpha(window.surface1, 0.35)
                             Text {
+                                anchors.centerIn: parent
+                                font.family: "Iosevka Nerd Font"
+                                font.pixelSize: window.s(20)
+                                color: window.subtext0
+                                text: window.activeMode === "wifi" ? "󰤮" : (window.activeMode === "eth" ? "󰈂" : "󰂲")
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: window.s(2)
+                            Text {
+                                Layout.fillWidth: true
                                 text: window.activeMode === "wifi" ? "Wi-Fi Disnonaktifkan" : (window.activeMode === "eth" ? "Ethernet Disconnected" : "Bluetooth Disnonaktifkan")
                                 font.family: "JetBrains Mono"
                                 font.weight: Font.Bold
-                                font.pixelSize: window.s(15)
+                                font.pixelSize: window.s(14)
                                 color: window.text
                             }
                             Text {
+                                Layout.fillWidth: true
                                 text: window.activeMode === "wifi" ? "Tekan tombol di bawah untuk menyalakan" : (window.activeMode === "eth" ? "Pasang kabel LAN ke port RJ45" : "Perangkat berpasangan dapat langsung dihubungkan")
                                 font.family: "JetBrains Mono"
-                                font.pixelSize: window.s(11)
+                                font.pixelSize: window.s(10)
                                 color: window.subtext0
+                                elide: Text.ElideRight
                             }
                         }
                     }
 
+                    // 2. Separator Line
                     Rectangle {
                         Layout.fillWidth: true
                         height: 1
                         color: Qt.alpha(window.surface1, 0.5)
                     }
 
-                    // Paired Devices Quick List (e.g. TWS) when Bluetooth is OFF
-                    ListView {
-                        id: offStateListView
+                    // 3. Paired Devices Quick List (Repeater for exact synchronous layout)
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: (window.activeMode === "bt" && count > 0) ? Math.min(contentHeight, window.s(90)) : 0
-                        Layout.maximumHeight: window.s(90)
                         spacing: window.s(6)
-                        clip: true
-                        model: window.activeMode === "bt" ? btListModel : null
-                        visible: window.activeMode === "bt" && count > 0
+                        visible: window.activeMode === "bt" && btListModel.count > 0
 
-                        delegate: Rectangle {
-                            width: offStateListView.width
-                            height: window.s(40)
-                            radius: window.s(10)
-                            color: window.surface0
-                            border.color: window.surface1
-                            border.width: 1
+                        Repeater {
+                            model: (window.activeMode === "bt" && btListModel.count > 0) ? Math.min(btListModel.count, 2) : 0
+                            delegate: Rectangle {
+                                Layout.fillWidth: true
+                                height: window.s(42)
+                                radius: window.s(10)
+                                color: window.surface0
+                                border.color: window.surface1
+                                border.width: 1
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: window.s(12)
-                                anchors.rightMargin: window.s(12)
+                                property var devData: btListModel.get(index)
 
-                                Text {
-                                    font.family: "Iosevka Nerd Font"
-                                    font.pixelSize: window.s(16)
-                                    color: window.text
-                                    text: model.icon || "🎧"
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: model.name || model.mac
-                                    font.family: "JetBrains Mono"
-                                    font.weight: Font.Bold
-                                    font.pixelSize: window.s(12)
-                                    color: window.text
-                                    elide: Text.ElideRight
-                                }
-                                Rectangle {
-                                    width: window.s(80); height: window.s(26); radius: window.s(6)
-                                    color: Qt.alpha(window.activeColor, 0.2)
-                                    border.color: window.activeColor; border.width: 1
-                                    Text { anchors.centerIn: parent; text: "Connect"; font.family: "JetBrains Mono"; font.pixelSize: window.s(10); font.weight: Font.Bold; color: window.activeColor }
-                                    MouseArea {
-                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                        onClicked: {
-                                            window.connectDevice(window.activeMode, model.id || model.mac, model.mac, "");
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: window.s(12)
+                                    anchors.rightMargin: window.s(12)
+                                    spacing: window.s(10)
+
+                                    Text {
+                                        font.family: "Iosevka Nerd Font"
+                                        font.pixelSize: window.s(16)
+                                        color: window.text
+                                        text: (devData && devData.icon) ? devData.icon : "🎧"
+                                    }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: (devData && devData.name) ? devData.name : ((devData && devData.mac) ? devData.mac : "")
+                                        font.family: "JetBrains Mono"
+                                        font.weight: Font.Bold
+                                        font.pixelSize: window.s(12)
+                                        color: window.text
+                                        elide: Text.ElideRight
+                                    }
+                                    Rectangle {
+                                        width: window.s(80); height: window.s(28); radius: window.s(6)
+                                        color: Qt.alpha(window.activeColor, 0.2)
+                                        border.color: window.activeColor; border.width: 1
+                                        Text { anchors.centerIn: parent; text: "Connect"; font.family: "JetBrains Mono"; font.pixelSize: window.s(11); font.weight: Font.Bold; color: window.activeColor }
+                                        MouseArea {
+                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                if (devData) window.connectDevice(window.activeMode, devData.id || devData.mac, devData.mac, "");
+                                            }
                                         }
                                     }
                                 }
@@ -1201,18 +1213,17 @@ Item {
                         }
                     }
 
-                    // Main Turn-On Power / Refresh Button
+                    // 4. Main Turn-On Power / Refresh Button
                     Rectangle {
                         Layout.fillWidth: true
-                        height: window.s(36)
+                        height: window.s(38)
                         radius: window.s(10)
                         color: window.activeColor
-                        visible: true
 
                         RowLayout {
                             anchors.centerIn: parent
                             spacing: window.s(8)
-                            Text { text: window.activeMode === "eth" ? "󰑐" : ""; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(14); color: window.base }
+                            Text { text: window.activeMode === "eth" ? "󰑐" : ""; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(15); color: window.base }
                             Text { text: window.activeMode === "wifi" ? "Nyalakan Wi-Fi" : (window.activeMode === "eth" ? "Cek Koneksi Ethernet" : "Nyalakan Bluetooth"); font.family: "JetBrains Mono"; font.weight: Font.Bold; font.pixelSize: window.s(12); color: window.base }
                         }
 
