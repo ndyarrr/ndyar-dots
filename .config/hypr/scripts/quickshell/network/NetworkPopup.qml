@@ -1094,7 +1094,7 @@ Item {
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: window.s(-30)
                 width: window.s(330)
-                height: (window.activeMode === "bt" && btListModel.count > 0) ? window.s(220) : window.s(170)
+                height: (window.activeMode === "bt" && btListModel.count > 0) ? window.s(260) : window.s(170)
                 radius: window.s(20)
                 color: Qt.alpha(window.mantle, 0.95)
                 border.color: Qt.alpha(window.surface1, 0.8)
@@ -1201,7 +1201,7 @@ Item {
                         height: window.s(36)
                         radius: window.s(10)
                         color: window.activeColor
-                        visible: !(window.activeMode === "bt" && btListModel.count > 0)
+                        visible: true
 
                         RowLayout {
                             anchors.centerIn: parent
@@ -2433,24 +2433,11 @@ Item {
                 z: 100
                 visible: !window.isFormalMode
 
-                // FIXED: Replaced direct Behavior on x/y with an interpolation value.
-                // This completely removes lag and overshooting when the parent window resizes/morphs.
-                property real pwrMorph: 1.0
-
-                width: window.s(160) + (window.s(48) - window.s(160)) * pwrMorph
-                height: width
-
-                x: {
-                    let startX = (parent.width / 2) - window.s(80);
-                    let endX = parent.width - window.s(30) - window.s(48);
-                    return startX + (endX - startX) * pwrMorph;
-                }
-                
-                y: {
-                    let startY = (parent.height - window.s(80)) / 2 - window.s(80);
-                    let endY = parent.height - window.s(30) - window.s(48);
-                    return startY + (endY - startY) * pwrMorph;
-                }
+                width: window.s(54)
+                height: window.s(54)
+                anchors.right: parent.right
+                anchors.rightMargin: window.s(25)
+                anchors.verticalCenter: bottomTabsContainer.verticalCenter
 
                 MultiEffect {
                     source: powerBtnRect
@@ -2496,10 +2483,9 @@ Item {
                         id: pwrIcon
                         anchors.centerIn: parent
                         font.family: "Iosevka Nerd Font"
-                        font.pixelSize: window.currentPower ? window.s(22) : window.s(64)
+                        font.pixelSize: window.s(22)
                         color: window.currentPower ? window.crust : window.text
                         text: window.currentPowerPending ? "󰑮" : ""
-                        Behavior on font.pixelSize { enabled: window.powerAnimAllowed; NumberAnimation { duration: 800; easing.type: Easing.InOutQuint } }
                         Behavior on color { enabled: window.powerAnimAllowed; ColorAnimation { duration: 800; easing.type: Easing.InOutQuint } }
 
                         RotationAnimation {
